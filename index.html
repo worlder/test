@@ -1,255 +1,4 @@
-// Authentication functions
-async function signUp() {
-const email = document.getElementById(‘signupEmail’).value;
-const password = document.getElementById(‘signupPassword’).value;
-
-```
-        if (!email || !password) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
-        
-        if (error) {
-            alert('Error: ' + error.message);
-        } else {
-            alert('Check your email for verification link!');
-        }
-    }
-
-    async function signIn() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        
-        if (!email || !password) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-        
-        if (error) {
-            alert('Error: ' + error.message);
-        }
-    }
-
-    async function signOut() {
-        await supabase.auth.signOut();
-    }
-
-    function showSignUp() {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'block';
-    }
-
-    function showSignIn() {
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    }
-
-    // Save data to Supabase
-    async function saveDataToSupabase() {
-        if (!currentUser) return;
-        
-        const userData = {
-            categories: categories,
-            tasks: tasks,
-            rules: rules,
-            rotation_index: rotationIndex
-        };
-        
-        const { data, error } = await supabase
-            .from('user_data')
-            .upsert({
-                user_id: currentUser.id,
-                ...userData,
-                updated_at: new Date().toISOString()
-            });
-        
-        if (error) {
-            console.error('Error saving data:', error);
-        }
-    }
-
-    // Load data from Supabase
-    async function loadDataFromSupabase() {
-        if (!currentUser) return;
-        
-        const { data, error } = await supabase
-            .from('user_data')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-        
-        if (error) {
-            console.log('No existing data found, using defaults');
-            return;
-        }
-        
-        if (data) {
-            if (data.categories) categories = data.categories;
-            if (data.tasks) tasks = data.tasks;
-            if (data.rules) rules = data.rules;
-            if (data.rotation_index) rotationIndex = data.rotation_index;
-            
-            // Refresh the interface
-            updateCategoryDropdown();
-            renderDailyView();
-            renderLimitsSection();
-            renderTaskList();
-            loadLimitsIntoForm();
-        }
-    }
-
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-            currentUser = session.user;
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('userEmail').textContent = currentUser.email;
-            document.getElementById('userInfo').style.display = 'block';
-            
-            // Load user's data
-            await loadDataFromSupabase();
-        } else {
-            currentUser = null;
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('userInfo').style.display = 'none';
-            showSignIn();
-        }
-    });
-
-    // Auto-save when data changes
-    const originalAddTask = addTask;
-    const originalDeleteTask = deleteTask;
-    const originalAddCategory = addCategory;
-    const originalUpdateLimits = updateLimits;
-
-    addTask = function() {
-        originalAddTask();
-        saveDataToSupabase();
-    };
-
-    deleteTask = function(category, taskId) {
-        originalDeleteTask(category, taskId);
-        saveDataToSupabase();
-    };
-
-    addCategory = function() {
-        originalAddCategory();
-        saveDataToSupabase();
-    };
-
-    updateLimits = function() {
-        originalUpdateLimits();
-        saveDataToSupabase();
-    };        .auth-section {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .auth-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .user-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #e3f2fd;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .logout-btn {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-    }
-
-    .auth-toggle {
-        color: #007bff;
-        cursor: pointer;
-        text-decoration: underline;
-        font-size: 14px;
-        margin-top: 10px;
-    }        function exportData() {
-        const data = {
-            categories: categories,
-            tasks: tasks,
-            rules: rules,
-            rotationIndex: rotationIndex,
-            exportDate: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(data, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'task-rotator-backup.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Show confirmation
-        alert('Data exported! Save this file before deploying updates.');
-    }
-
-    function importData() {
-        document.getElementById('importFile').click();
-    }
-
-    function handleFileImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = JSON.parse(e.target.result);
-                
-                // Restore data
-                if (data.categories) categories = data.categories;
-                if (data.tasks) tasks = data.tasks;
-                if (data.rules) rules = data.rules;
-                if (data.rotationIndex) rotationIndex = data.rotationIndex;
-                
-                // Refresh the interface
-                updateCategoryDropdown();
-                renderDailyView();
-                renderLimitsSection();
-                renderTaskList();
-                loadLimitsIntoForm();
-                
-                alert('Data imported successfully!');
-            } catch (error) {
-                alert('Error importing data. Please check the file format.');
-            }
-        };
-        reader.readAsText(file);
-    }<!DOCTYPE html>
-```
+<!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -332,10 +81,6 @@ const password = document.getElementById(‘signupPassword’).value;
         font-weight: 600;
     }
 
-    .comms { background: #ff6b6b; }
-    .learning { background: #4ecdc4; }
-    .construction { background: #45b7d1; }
-
     .section-title {
         font-size: 16px;
         font-weight: 600;
@@ -355,10 +100,6 @@ const password = document.getElementById(‘signupPassword’).value;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
-    .task-item.comms { border-left-color: #ff6b6b; }
-    .task-item.learning { border-left-color: #4ecdc4; }
-    .task-item.construction { border-left-color: #45b7d1; }
 
     .task-text {
         font-size: 15px;
@@ -509,6 +250,49 @@ const password = document.getElementById(‘signupPassword’).value;
         font-size: 11px;
         cursor: pointer;
     }
+
+    .auth-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .user-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #e3f2fd;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .auth-toggle {
+        color: #007bff;
+        cursor: pointer;
+        text-decoration: underline;
+        font-size: 14px;
+        margin-top: 10px;
+    }
 </style>
 ```
 
@@ -601,15 +385,6 @@ const password = document.getElementById(‘signupPassword’).value;
                 <!-- Daily limits will be dynamically generated -->
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Backup & Restore</label>
-                <div style="display: flex; gap: 10px;">
-                    <button class="add-btn" onclick="exportData()" style="flex: 1; margin-top: 0;">Export Data</button>
-                    <button class="add-btn" onclick="importData()" style="flex: 1; margin-top: 0; background: #007bff;">Import Data</button>
-                </div>
-                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleFileImport(event)">
-            </div>
-
             <div class="task-section">
                 <div class="section-title" style="margin-bottom: 15px;">Current Tasks</div>
                 <div id="taskList" class="task-list"></div>
@@ -631,6 +406,7 @@ const password = document.getElementById(‘signupPassword’).value;
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
+
     // Category definitions with icons and colors
     let categories = {
         comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
@@ -654,7 +430,7 @@ const password = document.getElementById(‘signupPassword’).value;
         construction: [
             { id: 8, text: "Research kitchen cabinet handles", type: "saturday" },
             { id: 9, text: "Call contractor about timeline", type: "thursday" },
-            { id: 10, text: "Pick paint colors for bedroom", type: "weekend" }
+            { id: 10, text: "Pick paint colors for bedroom", type: "weekends" }
         ]
     };
 
@@ -675,6 +451,133 @@ const password = document.getElementById(‘signupPassword’).value;
         learning: 0,
         construction: 0
     };
+
+    // Authentication functions
+    async function signUp() {
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+        
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+        });
+        
+        if (error) {
+            alert('Error: ' + error.message);
+        } else {
+            alert('Check your email for verification link!');
+        }
+    }
+
+    async function signIn() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+        
+        if (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    async function signOut() {
+        await supabase.auth.signOut();
+    }
+
+    function showSignUp() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('signupForm').style.display = 'block';
+    }
+
+    function showSignIn() {
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    }
+
+    // Save data to Supabase
+    async function saveDataToSupabase() {
+        if (!currentUser) return;
+        
+        const userData = {
+            categories: categories,
+            tasks: tasks,
+            rules: rules,
+            rotation_index: rotationIndex
+        };
+        
+        const { data, error } = await supabase
+            .from('user_data')
+            .upsert({
+                user_id: currentUser.id,
+                ...userData,
+                updated_at: new Date().toISOString()
+            });
+        
+        if (error) {
+            console.error('Error saving data:', error);
+        }
+    }
+
+    // Load data from Supabase
+    async function loadDataFromSupabase() {
+        if (!currentUser) return;
+        
+        const { data, error } = await supabase
+            .from('user_data')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+        
+        if (error) {
+            console.log('No existing data found, using defaults');
+            return;
+        }
+        
+        if (data) {
+            if (data.categories) categories = data.categories;
+            if (data.tasks) tasks = data.tasks;
+            if (data.rules) rules = data.rules;
+            if (data.rotation_index) rotationIndex = data.rotation_index;
+            
+            // Refresh the interface
+            updateCategoryDropdown();
+            renderDailyView();
+            renderLimitsSection();
+            renderTaskList();
+            loadLimitsIntoForm();
+        }
+    }
+
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+            currentUser = session.user;
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('userInfo').style.display = 'block';
+            
+            // Load user's data
+            await loadDataFromSupabase();
+        } else {
+            currentUser = null;
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+            showSignIn();
+        }
+    });
 
     function getCurrentDate() {
         const today = new Date();
@@ -808,6 +711,9 @@ const password = document.getElementById(‘signupPassword’).value;
             renderDailyView();
             renderLimitsSection();
             
+            // Save to Supabase
+            saveDataToSupabase();
+            
             // Show confirmation
             const btn = event.target;
             btn.textContent = 'Added!';
@@ -938,118 +844,5 @@ const password = document.getElementById(‘signupPassword’).value;
                 taskElement.className = 'task-list-item';
                 taskElement.innerHTML = `
                     <span>${task.text} (${category}, ${task.type})</span>
-                    <button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>
-                `;
-                container.appendChild(taskElement);
-            });
-        }
-    }
-
-    function addTask() {
-        const text = document.getElementById('newTaskInput').value.trim();
-        const category = document.getElementById('taskCategory').value;
-        const type = document.getElementById('taskType').value;
-
-        if (text) {
-            const newTask = {
-                id: Date.now(),
-                text: text,
-                type: type
-            };
-            
-            tasks[category].push(newTask);
-            document.getElementById('newTaskInput').value = '';
-            renderTaskList();
-        }
-    }
-
-    function deleteTask(category, taskId) {
-        tasks[category] = tasks[category].filter(task => task.id !== taskId);
-        renderTaskList();
-        renderDailyTasks();
-    }
-
-    function completeTask(taskId) {
-        // In a real app, this would mark the task as completed
-        // For now, we'll just show a simple animation
-        event.target.textContent = '✓';
-        event.target.style.background = '#28a745';
-        setTimeout(() => {
-            renderDailyTasks();
-        }, 1000);
-    }
-
-    function updateLimits() {
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        for (const categoryId of Object.keys(categories)) {
-            for (const dayKey of dayKeys) {
-                const input = document.getElementById(`${categoryId}${dayKey}`);
-                if (input) {
-                    rules[categoryId][dayKey] = parseInt(input.value) || 0;
-                }
-            }
-        }
-        
-        // Show confirmation
-        const btn = event.target;
-        btn.textContent = 'Updated!';
-        btn.style.background = '#28a745';
-        setTimeout(() => {
-            btn.textContent = 'Update Limits';
-            btn.style.background = '#28a745';
-        }, 1500);
-    }
-
-    function loadLimitsIntoForm() {
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        for (const categoryId of Object.keys(categories)) {
-            for (const dayKey of dayKeys) {
-                const input = document.getElementById(`${categoryId}${dayKey}`);
-                if (input && rules[categoryId] && rules[categoryId][dayKey] !== undefined) {
-                    input.value = rules[categoryId][dayKey];
-                }
-            }
-        }
-    }
-
-    function showView(viewName) {
-        document.querySelectorAll('.view-section').forEach(section => {
-            section.style.display = 'none';
-        });
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        if (viewName === 'daily') {
-            document.getElementById('dailyView').style.display = 'block';
-            event.target.classList.add('active');
-            renderDailyTasks();
-        } else if (viewName === 'setup') {
-            document.getElementById('setupView').style.display = 'block';
-            document.getElementById('setupView').classList.add('active');
-            event.target.classList.add('active');
-            updateCategoryDropdown();
-            renderTaskList();
-            renderLimitsSection();
-            loadLimitsIntoForm();
-        }
-    }
-
-    // Initialize the app
-    document.getElementById('currentDate').textContent = getCurrentDate();
-    updateCategoryDropdown();
-    renderDailyTasks();
-
-    // Allow Enter key to add tasks
-    document.getElementById('newTaskInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addTask();
-        }
-    });
-</script>
+                    <button class="delete-btn" onclick="deleteTask
 ```
-
-</body>
-</html>
