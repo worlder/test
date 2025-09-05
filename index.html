@@ -462,15 +462,24 @@
             return;
         }
         
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters');
+            return;
+        }
         
-        if (error) {
-            alert('Error: ' + error.message);
-        } else {
-            alert('Check your email for verification link!');
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+            });
+            
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                alert('Check your email for verification link!');
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
         }
     }
 
@@ -483,13 +492,17 @@
             return;
         }
         
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-        
-        if (error) {
-            alert('Error: ' + error.message);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+            
+            if (error) {
+                alert('Error: ' + error.message);
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
         }
     }
 
@@ -518,16 +531,20 @@
             rotation_index: rotationIndex
         };
         
-        const { data, error } = await supabase
-            .from('user_data')
-            .upsert({
-                user_id: currentUser.id,
-                ...userData,
-                updated_at: new Date().toISOString()
-            });
-        
-        if (error) {
-            console.error('Error saving data:', error);
+        try {
+            const { data, error } = await supabase
+                .from('user_data')
+                .upsert({
+                    user_id: currentUser.id,
+                    ...userData,
+                    updated_at: new Date().toISOString()
+                });
+            
+            if (error) {
+                console.error('Error saving data:', error);
+            }
+        } catch (err) {
+            console.error('Error saving data:', err);
         }
     }
 
@@ -535,29 +552,33 @@
     async function loadDataFromSupabase() {
         if (!currentUser) return;
         
-        const { data, error } = await supabase
-            .from('user_data')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-        
-        if (error) {
-            console.log('No existing data found, using defaults');
-            return;
-        }
-        
-        if (data) {
-            if (data.categories) categories = data.categories;
-            if (data.tasks) tasks = data.tasks;
-            if (data.rules) rules = data.rules;
-            if (data.rotation_index) rotationIndex = data.rotation_index;
+        try {
+            const { data, error } = await supabase
+                .from('user_data')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .single();
             
-            // Refresh the interface
-            updateCategoryDropdown();
-            renderDailyView();
-            renderLimitsSection();
-            renderTaskList();
-            loadLimitsIntoForm();
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading data:', error);
+                return;
+            }
+            
+            if (data) {
+                if (data.categories) categories = data.categories;
+                if (data.tasks) tasks = data.tasks;
+                if (data.rules) rules = data.rules;
+                if (data.rotation_index) rotationIndex = data.rotation_index;
+                
+                // Refresh the interface
+                updateCategoryDropdown();
+                renderDailyView();
+                renderLimitsSection();
+                renderTaskList();
+                loadLimitsIntoForm();
+            }
+        } catch (err) {
+            console.error('Error loading data:', err);
         }
     }
 
@@ -593,12 +614,12 @@
     function isWeekend() {
         const today = new Date();
         const day = today.getDay();
-        return day === 0 || day === 6; // Sunday or Saturday
+        return day === 0 || day === 6;
     }
 
     function shouldTaskAppearToday(task) {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const dayOfWeek = today.getDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const isWeekday = !isWeekend;
         
@@ -628,9 +649,7 @@
             case 'quarterly':
             case 'biannual':
             case 'yearly':
-                // For demo purposes, we'll show these occasionally
-                // In a real app, you'd track last completion dates
-                return Math.random() > 0.7; // 30% chance to appear
+                return Math.random() > 0.7;
             default:
                 return false;
         }
@@ -651,10 +670,8 @@
             const limit = rules[category][currentDay] || 0;
             
             if (limit > 0 && categoryTasks.length > 0) {
-                // Get tasks that should appear today based on frequency
                 const availableTasks = categoryTasks.filter(task => shouldTaskAppearToday(task));
                 
-                // Take up to the limit, rotating through available tasks
                 for (let i = 0; i < Math.min(limit, availableTasks.length); i++) {
                     const taskIndex = (rotationIndex[category] + i) % availableTasks.length;
                     if (availableTasks[taskIndex]) {
@@ -683,44 +700,35 @@
         if (name) {
             const categoryId = name.toLowerCase().replace(/\s+/g, '');
             
-            // Add to categories
             categories[categoryId] = {
                 name: name,
                 icon: icon,
                 color: generateRandomColor()
             };
             
-            // Initialize empty task list
             tasks[categoryId] = [];
             
-            // Initialize rules for new categories
             rules[categoryId] = { 
                 monday: 1, tuesday: 1, wednesday: 1, thursday: 1, 
                 friday: 1, saturday: 1, sunday: 1 
             };
             
-            // Initialize rotation index
             rotationIndex[categoryId] = 0;
             
-            // Clear inputs
             document.getElementById('newCategoryInput').value = '';
             document.getElementById('newCategoryIcon').value = '';
             
-            // Refresh the interface
             updateCategoryDropdown();
             renderDailyView();
             renderLimitsSection();
             
-            // Save to Supabase
             saveDataToSupabase();
             
-            // Show confirmation
             const btn = event.target;
+            const originalText = btn.textContent;
             btn.textContent = 'Added!';
-            btn.style.background = '#28a745';
             setTimeout(() => {
-                btn.textContent = 'Add Category';
-                btn.style.background = '#28a745';
+                btn.textContent = originalText;
             }, 1500);
         }
     }
@@ -741,10 +749,8 @@
         const dailyViewContent = document.getElementById('dailyView');
         const dailyTasks = generateDailyTasks();
         
-        // Clear existing content
         dailyViewContent.innerHTML = '';
         
-        // Add each category section
         for (const [categoryId, category] of Object.entries(categories)) {
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'task-section';
@@ -759,7 +765,6 @@
             
             dailyViewContent.appendChild(sectionDiv);
             
-            // Render tasks for this category
             const container = document.getElementById(`${categoryId}Tasks`);
             const categoryTasks = dailyTasks[categoryId] || [];
             
@@ -768,7 +773,7 @@
             } else {
                 categoryTasks.forEach(task => {
                     const taskElement = document.createElement('div');
-                    taskElement.className = `task-item`;
+                    taskElement.className = 'task-item';
                     taskElement.style.borderLeftColor = category.color;
                     taskElement.innerHTML = `
                         <div class="task-text">${task.text}</div>
@@ -782,7 +787,6 @@
             }
         }
         
-        // Add stats
         const statsDiv = document.createElement('div');
         statsDiv.className = 'stats';
         statsDiv.innerHTML = '<div class="stats-text">Perfect! Today\'s list respects your limits and helps you make progress.</div>';
@@ -790,7 +794,8 @@
     }
 
     function renderLimitsSection() {
-        const limitsContainer = document.querySelector('.task-section');
+        const setupView = document.getElementById('setupView');
+        const limitsContainer = setupView.querySelector('.task-section');
         if (!limitsContainer) return;
         
         let limitsHTML = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits by Day</div>';
@@ -799,10 +804,7 @@
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
         for (const [categoryId, category] of Object.entries(categories)) {
-            limitsHTML += `
-                <div class="form-group">
-                    <label class="form-label">${category.name} Tasks</label>
-            `;
+            limitsHTML += `<div class="form-group"><label class="form-label">${category.name} Tasks</label>`;
             
             for (let i = 0; i < days.length; i++) {
                 const dayKey = dayKeys[i];
@@ -821,17 +823,7 @@
         }
         
         limitsHTML += '<button class="add-btn" onclick="updateLimits()">Update Limits</button>';
-        
-        // Find the limits section and update it
-        const setupView = document.getElementById('setupView');
-        const existingLimits = setupView.querySelector('.task-section');
-        if (existingLimits) {
-            existingLimits.innerHTML = limitsHTML;
-        }
-    }
-
-    function renderDailyTasks() {
-        renderDailyView();
+        limitsContainer.innerHTML = limitsHTML;
     }
 
     function renderTaskList() {
@@ -844,5 +836,32 @@
                 taskElement.className = 'task-list-item';
                 taskElement.innerHTML = `
                     <span>${task.text} (${category}, ${task.type})</span>
-                    <button class="delete-btn" onclick="deleteTask
+                    <button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>
+                `;
+                container.appendChild(taskElement);
+            });
+        }
+    }
+
+    function addTask() {
+        const text = document.getElementById('newTaskInput').value.trim();
+        const category = document.getElementById('taskCategory').value;
+        const type = document.getElementById('taskType').value;
+
+        if (text) {
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                type: type
+            };
+            
+            tasks[category].push(newTask);
+            document.getElementById('newTaskInput').value = '';
+            renderTaskList();
+            saveDataToSupabase();
+        }
+    }
+
+    function deleteTask(category, taskId) {
+        tasks[category] = tasks[category].filter(task =>
 ```
