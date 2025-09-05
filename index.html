@@ -295,10 +295,23 @@
                     <option value="construction">Construction</option>
                 </select>
                 <select class="form-input" id="taskType" style="margin-top: 8px;">
-                    <option value="oneTime">One-time</option>
+                    <option value="never">Never</option>
                     <option value="daily">Daily</option>
+                    <option value="weekdays">Weekdays</option>
+                    <option value="weekends">Weekends</option>
+                    <option value="monday">Mondays only</option>
+                    <option value="tuesday">Tuesdays only</option>
+                    <option value="wednesday">Wednesdays only</option>
+                    <option value="thursday">Thursdays only</option>
+                    <option value="friday">Fridays only</option>
+                    <option value="saturday">Saturdays only</option>
+                    <option value="sunday">Sundays only</option>
                     <option value="weekly">Weekly</option>
+                    <option value="biweekly">Biweekly</option>
                     <option value="monthly">Monthly</option>
+                    <option value="quarterly">Every 3 Months</option>
+                    <option value="biannual">Every 6 Months</option>
+                    <option value="yearly">Yearly</option>
                 </select>
                 <button class="add-btn" onclick="addTask()">Add Task</button>
             </div>
@@ -331,27 +344,33 @@
     // Sample data structure
     let tasks = {
         comms: [
-            { id: 1, text: "Clear email inbox", type: "weekly" },
-            { id: 2, text: "Upload photos to Nixplay", type: "weekly" },
-            { id: 3, text: "Call insurance about claim", type: "oneTime" }
+            { id: 1, text: "Clear email inbox", type: "weekdays" },
+            { id: 2, text: "Upload photos to Nixplay", type: "sunday" },
+            { id: 3, text: "Call insurance about claim", type: "never" }
         ],
         learning: [
-            { id: 4, text: "Read BBC News", type: "weekly" },
-            { id: 5, text: "Check music blog - Pitchfork", type: "weekly" },
-            { id: 6, text: "Review Twitter account @interesting", type: "weekly" },
-            { id: 7, text: "Research meditation apps", type: "oneTime" }
+            { id: 4, text: "Read BBC News", type: "wednesday" },
+            { id: 5, text: "Check music blog - Pitchfork", type: "friday" },
+            { id: 6, text: "Review Twitter account @interesting", type: "monthly" },
+            { id: 7, text: "Research meditation apps", type: "never" }
         ],
         construction: [
-            { id: 8, text: "Research kitchen cabinet handles", type: "weekly" },
-            { id: 9, text: "Call contractor about timeline", type: "oneTime" },
-            { id: 10, text: "Pick paint colors for bedroom", type: "weekly" }
+            { id: 8, text: "Research kitchen cabinet handles", type: "saturday" },
+            { id: 9, text: "Call contractor about timeline", type: "thursday" },
+            { id: 10, text: "Pick paint colors for bedroom", type: "weekend" }
         ]
     };
 
     let rules = {
-        comms: { weekday: 1, weekend: 0 },
-        learning: { weekday: 1, weekend: 1 },
-        construction: { weekday: 0, weekend: 1 }
+        comms: { 
+            monday: 1, tuesday: 1, wednesday: 0, thursday: 1, friday: 1, saturday: 0, sunday: 0 
+        },
+        learning: { 
+            monday: 1, tuesday: 1, wednesday: 2, thursday: 1, friday: 1, saturday: 1, sunday: 1 
+        },
+        construction: { 
+            monday: 0, tuesday: 0, wednesday: 0, thursday: 1, friday: 0, saturday: 2, sunday: 1 
+        }
     };
 
     let rotationIndex = {
@@ -377,30 +396,75 @@
         return day === 0 || day === 6; // Sunday or Saturday
     }
 
+    function shouldTaskAppearToday(task) {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isWeekday = !isWeekend;
+        
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const todayName = dayNames[dayOfWeek];
+        
+        switch (task.type) {
+            case 'never':
+                return false;
+            case 'daily':
+                return true;
+            case 'weekdays':
+                return isWeekday;
+            case 'weekends':
+                return isWeekend;
+            case 'monday':
+            case 'tuesday':
+            case 'wednesday':
+            case 'thursday':
+            case 'friday':
+            case 'saturday':
+            case 'sunday':
+                return task.type === todayName;
+            case 'weekly':
+            case 'biweekly':
+            case 'monthly':
+            case 'quarterly':
+            case 'biannual':
+            case 'yearly':
+                // For demo purposes, we'll show these occasionally
+                // In a real app, you'd track last completion dates
+                return Math.random() > 0.7; // 30% chance to appear
+            default:
+                return false;
+        }
+    }
+
+    function getCurrentDayName() {
+        const today = new Date();
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        return dayNames[today.getDay()];
+    }
+
     function generateDailyTasks() {
-        const weekend = isWeekend();
+        const currentDay = getCurrentDayName();
         const dailyTasks = {};
 
         for (const [category, categoryTasks] of Object.entries(tasks)) {
             dailyTasks[category] = [];
-            const limit = weekend ? rules[category].weekend : rules[category].weekday;
+            const limit = rules[category][currentDay] || 0;
             
             if (limit > 0 && categoryTasks.length > 0) {
                 // Get tasks that should appear today based on frequency
-                const availableTasks = categoryTasks.filter(task => {
-                    if (task.type === 'oneTime') return true;
-                    if (task.type === 'daily') return true;
-                    if (task.type === 'weekly') return true; // For demo, show weekly tasks
-                    if (task.type === 'monthly') return true; // For demo, show monthly tasks
-                    return false;
-                });
+                const availableTasks = categoryTasks.filter(task => shouldTaskAppearToday(task));
                 
                 // Take up to the limit, rotating through available tasks
                 for (let i = 0; i < Math.min(limit, availableTasks.length); i++) {
                     const taskIndex = (rotationIndex[category] + i) % availableTasks.length;
-                    dailyTasks[category].push(availableTasks[taskIndex]);
+                    if (availableTasks[taskIndex]) {
+                        dailyTasks[category].push(availableTasks[taskIndex]);
+                    }
                 }
-                rotationIndex[category] = (rotationIndex[category] + limit) % availableTasks.length;
+                
+                if (availableTasks.length > 0) {
+                    rotationIndex[category] = (rotationIndex[category] + limit) % availableTasks.length;
+                }
             }
         }
 
@@ -429,8 +493,11 @@
             // Initialize empty task list
             tasks[categoryId] = [];
             
-            // Initialize rules
-            rules[categoryId] = { weekday: 1, weekend: 1 };
+            // Initialize rules for new categories
+            rules[categoryId] = { 
+                monday: 1, tuesday: 1, wednesday: 1, thursday: 1, 
+                friday: 1, saturday: 1, sunday: 1 
+            };
             
             // Initialize rotation index
             rotationIndex[categoryId] = 0;
@@ -523,24 +590,31 @@
         const limitsContainer = document.querySelector('.task-section');
         if (!limitsContainer) return;
         
-        let limitsHTML = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits</div>';
+        let limitsHTML = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits by Day</div>';
+        
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
         for (const [categoryId, category] of Object.entries(categories)) {
             limitsHTML += `
                 <div class="form-group">
                     <label class="form-label">${category.name} Tasks</label>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            `;
+            
+            for (let i = 0; i < days.length; i++) {
+                const dayKey = dayKeys[i];
+                const dayName = days[i];
+                limitsHTML += `
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                        <div style="width: 80px; font-size: 13px; color: #666;">${dayName}</div>
                         <div style="flex: 1;">
-                            <label style="font-size: 12px; color: #666;">Weekdays</label>
-                            <input type="number" class="form-input" id="${categoryId}Weekday" min="0" max="10" value="${rules[categoryId].weekday}">
-                        </div>
-                        <div style="flex: 1;">
-                            <label style="font-size: 12px; color: #666;">Weekends</label>
-                            <input type="number" class="form-input" id="${categoryId}Weekend" min="0" max="10" value="${rules[categoryId].weekend}">
+                            <input type="number" class="form-input" id="${categoryId}${dayKey}" min="0" max="10" value="${rules[categoryId][dayKey]}" style="padding: 8px;">
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
+            
+            limitsHTML += '</div>';
         }
         
         limitsHTML += '<button class="add-btn" onclick="updateLimits()">Update Limits</button>';
@@ -609,13 +683,14 @@
     }
 
     function updateLimits() {
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
         for (const categoryId of Object.keys(categories)) {
-            const weekdayInput = document.getElementById(`${categoryId}Weekday`);
-            const weekendInput = document.getElementById(`${categoryId}Weekend`);
-            
-            if (weekdayInput && weekendInput) {
-                rules[categoryId].weekday = parseInt(weekdayInput.value);
-                rules[categoryId].weekend = parseInt(weekendInput.value);
+            for (const dayKey of dayKeys) {
+                const input = document.getElementById(`${categoryId}${dayKey}`);
+                if (input) {
+                    rules[categoryId][dayKey] = parseInt(input.value) || 0;
+                }
             }
         }
         
@@ -630,13 +705,14 @@
     }
 
     function loadLimitsIntoForm() {
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
         for (const categoryId of Object.keys(categories)) {
-            const weekdayInput = document.getElementById(`${categoryId}Weekday`);
-            const weekendInput = document.getElementById(`${categoryId}Weekend`);
-            
-            if (weekdayInput && weekendInput) {
-                weekdayInput.value = rules[categoryId].weekday;
-                weekendInput.value = rules[categoryId].weekend;
+            for (const dayKey of dayKeys) {
+                const input = document.getElementById(`${categoryId}${dayKey}`);
+                if (input && rules[categoryId] && rules[categoryId][dayKey] !== undefined) {
+                    input.value = rules[categoryId][dayKey];
+                }
             }
         }
     }
