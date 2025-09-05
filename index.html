@@ -382,6 +382,11 @@
             </div>
 
             <div class="task-section">
+                <div class="section-title" style="margin-bottom: 15px;">Manage Categories</div>
+                <div id="categoryList" class="task-list"></div>
+            </div>
+
+            <div class="task-section">
                 <!-- Daily limits will be dynamically generated -->
             </div>
 
@@ -575,6 +580,7 @@
                 renderDailyView();
                 renderLimitsSection();
                 renderTaskList();
+                renderCategoryList();
                 loadLimitsIntoForm();
             }
         } catch (err) {
@@ -721,6 +727,7 @@
             updateCategoryDropdown();
             renderDailyView();
             renderLimitsSection();
+            renderCategoryList();
             
             saveDataToSupabase();
             
@@ -730,6 +737,64 @@
             setTimeout(() => {
                 btn.textContent = originalText;
             }, 1500);
+        }
+    }
+
+    function deleteCategory(categoryId) {
+        // Don't allow deleting if it's the only category
+        if (Object.keys(categories).length <= 1) {
+            alert('You must have at least one category');
+            return;
+        }
+        
+        // Confirm deletion
+        const categoryName = categories[categoryId].name;
+        const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
+        
+        if (taskCount > 0) {
+            if (!confirm(`Delete "${categoryName}" category? This will also delete ${taskCount} task(s) in this category.`)) {
+                return;
+            }
+        } else {
+            if (!confirm(`Delete "${categoryName}" category?`)) {
+                return;
+            }
+        }
+        
+        // Delete the category and its data
+        delete categories[categoryId];
+        delete tasks[categoryId];
+        delete rules[categoryId];
+        delete rotationIndex[categoryId];
+        
+        // Refresh the interface
+        updateCategoryDropdown();
+        renderDailyView();
+        renderLimitsSection();
+        renderCategoryList();
+        renderTaskList();
+        loadLimitsIntoForm();
+        
+        // Save to Supabase
+        saveDataToSupabase();
+    }
+
+    function renderCategoryList() {
+        const container = document.getElementById('categoryList');
+        container.innerHTML = '';
+
+        for (const [categoryId, category] of Object.entries(categories)) {
+            const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
+            const categoryElement = document.createElement('div');
+            categoryElement.className = 'task-list-item';
+            categoryElement.innerHTML = `
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">${category.icon}</span>
+                    <span>${category.name} (${taskCount} tasks)</span>
+                </span>
+                <button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>
+            `;
+            container.appendChild(categoryElement);
         }
     }
 
@@ -931,6 +996,7 @@
             updateCategoryDropdown();
             renderTaskList();
             renderLimitsSection();
+            renderCategoryList();
             loadLimitsIntoForm();
         }
     }
@@ -939,6 +1005,7 @@
     document.getElementById('currentDate').textContent = getCurrentDate();
     updateCategoryDropdown();
     renderDailyView();
+    renderCategoryList();
 
     // Allow Enter key to add tasks
     document.getElementById('newTaskInput').addEventListener('keypress', function(e) {
