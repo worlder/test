@@ -863,5 +863,93 @@
     }
 
     function deleteTask(category, taskId) {
-        tasks[category] = tasks[category].filter(task =>
+        tasks[category] = tasks[category].filter(task => task.id !== taskId);
+        renderTaskList();
+        renderDailyView();
+        saveDataToSupabase();
+    }
+
+    function completeTask(taskId) {
+        event.target.textContent = '✓';
+        event.target.style.background = '#28a745';
+        setTimeout(() => {
+            renderDailyView();
+        }, 1000);
+    }
+
+    function updateLimits() {
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        for (const categoryId of Object.keys(categories)) {
+            for (const dayKey of dayKeys) {
+                const input = document.getElementById(`${categoryId}${dayKey}`);
+                if (input) {
+                    rules[categoryId][dayKey] = parseInt(input.value) || 0;
+                }
+            }
+        }
+        
+        saveDataToSupabase();
+        
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Updated!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 1500);
+    }
+
+    function loadLimitsIntoForm() {
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        for (const categoryId of Object.keys(categories)) {
+            for (const dayKey of dayKeys) {
+                const input = document.getElementById(`${categoryId}${dayKey}`);
+                if (input && rules[categoryId] && rules[categoryId][dayKey] !== undefined) {
+                    input.value = rules[categoryId][dayKey];
+                }
+            }
+        }
+    }
+
+    function showView(viewName) {
+        document.querySelectorAll('.view-section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        if (viewName === 'daily') {
+            document.getElementById('dailyView').style.display = 'block';
+            event.target.classList.add('active');
+            renderDailyView();
+        } else if (viewName === 'setup') {
+            document.getElementById('setupView').style.display = 'block';
+            document.getElementById('setupView').classList.add('active');
+            event.target.classList.add('active');
+            updateCategoryDropdown();
+            renderTaskList();
+            renderLimitsSection();
+            loadLimitsIntoForm();
+        }
+    }
+
+    // Initialize the app
+    document.getElementById('currentDate').textContent = getCurrentDate();
+    updateCategoryDropdown();
+    renderDailyView();
+
+    // Allow Enter key to add tasks
+    document.getElementById('newTaskInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTask();
+        }
+    });
+</script>
 ```
+
+</body>
+</html>
+</body>
+</html>
