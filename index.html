@@ -6,308 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Task Rotator</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-```
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
-        color: #333;
-    }
-
-    .container {
-        max-width: 400px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .header {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-        padding: 30px 20px;
-        text-align: center;
-    }
-
-    .date {
-        font-size: 14px;
-        opacity: 0.9;
-        margin-bottom: 5px;
-    }
-
-    .title {
-        font-size: 24px;
-        font-weight: 600;
-    }
-
-    .subtitle {
-        font-size: 14px;
-        opacity: 0.8;
-        margin-top: 5px;
-    }
-
-    .content {
-        padding: 25px 20px;
-    }
-
-    .task-section {
-        margin-bottom: 25px;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-
-    .section-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-        margin-right: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        color: white;
-        font-weight: 600;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #333;
-    }
-
-    .task-item {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 10px;
-        border-left: 4px solid #e9ecef;
-        transition: all 0.3s ease;
-    }
-
-    .task-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .task-text {
-        font-size: 15px;
-        line-height: 1.4;
-        color: #333;
-    }
-
-    .task-meta {
-        font-size: 12px;
-        color: #666;
-        margin-top: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .task-type {
-        background: #e9ecef;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 11px;
-        font-weight: 500;
-    }
-
-    .complete-btn {
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .complete-btn:hover {
-        background: #218838;
-    }
-
-    .stats {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 15px;
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .stats-text {
-        font-size: 13px;
-        color: #666;
-    }
-
-    .nav-buttons {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .nav-btn {
-        flex: 1;
-        background: #6c757d;
-        color: white;
-        border: none;
-        padding: 12px;
-        border-radius: 10px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .nav-btn:hover {
-        background: #5a6268;
-    }
-
-    .nav-btn.active {
-        background: #007bff;
-    }
-
-    .setup-section {
-        display: none;
-    }
-
-    .setup-section.active {
-        display: block;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #333;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: #007bff;
-    }
-
-    .add-btn {
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 10px;
-        font-size: 14px;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .task-list {
-        max-height: 200px;
-        overflow-y: auto;
-        margin-top: 15px;
-    }
-
-    .task-list-item {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 8px;
-        font-size: 13px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .delete-btn {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        cursor: pointer;
-    }
-
-    .auth-section {
-        background: #f8f9fa;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .auth-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .user-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #e3f2fd;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .logout-btn {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-    }
-
-    .auth-toggle {
-        color: #007bff;
-        cursor: pointer;
-        text-decoration: underline;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-</style>
-```
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px 20px; text-align: center; }
+        .title { font-size: 24px; font-weight: 600; }
+        .content { padding: 25px 20px; }
+        .task-section { margin-bottom: 25px; }
+        .section-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .section-icon { width: 24px; height: 24px; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: 600; }
+        .section-title { font-size: 16px; font-weight: 600; color: #333; }
+        .task-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #e9ecef; transition: all 0.3s ease; }
+        .task-text { font-size: 15px; line-height: 1.4; color: #333; }
+        .task-meta { font-size: 12px; color: #666; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .task-type { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+        .complete-btn { background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .nav-btn { flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+        .nav-btn.active { background: #007bff; }
+        .setup-section { display: none; }
+        .setup-section.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #333; }
+        .form-input { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 14px; }
+        .add-btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .task-list { max-height: 200px; overflow-y: auto; margin-top: 15px; }
+        .task-list-item { background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .auth-section { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
+        .auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .user-info { display: flex; justify-content: space-between; align-items: center; background: #e3f2fd; padding: 10px 15px; border-radius: 8px; font-size: 14px; }
+        .auth-toggle { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 14px; margin-top: 10px; }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="date" id="currentDate"></div>
+            <div id="currentDate"></div>
             <div class="title">Today's Focus</div>
-            <div class="subtitle">Your manageable daily tasks</div>
         </div>
 
 ```
     <div class="content">
-        <!-- Auth Section -->
         <div id="authSection" class="auth-section">
             <div id="loginForm">
                 <div style="font-weight: 600; margin-bottom: 10px;">Sign in to save your tasks</div>
@@ -332,33 +72,25 @@
             <div id="userInfo" style="display: none;">
                 <div class="user-info">
                     <span id="userEmail"></span>
-                    <button class="logout-btn" onclick="signOut()">Sign Out</button>
+                    <button class="delete-btn" onclick="signOut()">Sign Out</button>
                 </div>
             </div>
         </div>
 
-        <!-- Daily View -->
-        <div id="dailyView" class="view-section">
-            <!-- Content will be dynamically generated -->
-        </div>
+        <div id="dailyView" class="view-section"></div>
 
-        <!-- Setup View -->
         <div id="setupView" class="view-section setup-section">
             <div class="form-group">
                 <label class="form-label">Create New Category</label>
-                <input type="text" class="form-input" id="newCategoryInput" placeholder="Enter category name (e.g., Health, Finance)">
-                <input type="text" class="form-input" id="newCategoryIcon" placeholder="Enter emoji (e.g., 💪, 💰)" style="margin-top: 8px;">
+                <input type="text" class="form-input" id="newCategoryInput" placeholder="Enter category name">
+                <input type="text" class="form-input" id="newCategoryIcon" placeholder="Enter emoji" style="margin-top: 8px;">
                 <button class="add-btn" onclick="addCategory()">Add Category</button>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Add New Task</label>
                 <input type="text" class="form-input" id="newTaskInput" placeholder="Enter task description">
-                <select class="form-input" id="taskCategory" style="margin-top: 8px;">
-                    <option value="comms">Communications</option>
-                    <option value="learning">Learning</option>
-                    <option value="construction">Construction</option>
-                </select>
+                <select class="form-input" id="taskCategory" style="margin-top: 8px;"></select>
                 <select class="form-input" id="taskType" style="margin-top: 8px;">
                     <option value="never">Never</option>
                     <option value="daily">Daily</option>
@@ -372,11 +104,7 @@
                     <option value="saturday">Saturdays only</option>
                     <option value="sunday">Sundays only</option>
                     <option value="weekly">Weekly</option>
-                    <option value="biweekly">Biweekly</option>
                     <option value="monthly">Monthly</option>
-                    <option value="quarterly">Every 3 Months</option>
-                    <option value="biannual">Every 6 Months</option>
-                    <option value="yearly">Yearly</option>
                 </select>
                 <button class="add-btn" onclick="addTask()">Add Task</button>
             </div>
@@ -386,9 +114,7 @@
                 <div id="categoryList" class="task-list"></div>
             </div>
 
-            <div class="task-section">
-                <!-- Daily limits will be dynamically generated -->
-            </div>
+            <div class="task-section" id="limitsSection"></div>
 
             <div class="task-section">
                 <div class="section-title" style="margin-bottom: 15px;">Current Tasks</div>
@@ -406,110 +132,46 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // Initialize Supabase
     const SUPABASE_URL = 'https://mpcioiimgrunrxzinhlu.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wY2lvaWltZ3J1bnJ4emluaGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDMyNTUsImV4cCI6MjA3MjY3OTI1NX0.HLEnWmw7RpNFrNePuvSr24ka0wXblPWiGYAaC65XYJg';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
-
-    // Category definitions with icons and colors
     let categories = {
         comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
         learning: { name: 'Learning', icon: '📚', color: '#4ecdc4' },
         construction: { name: 'Construction', icon: '🔨', color: '#45b7d1' }
     };
-
-    // Sample data structure
     let tasks = {
-        comms: [
-            { id: 1, text: "Clear email inbox", type: "weekdays" },
-            { id: 2, text: "Upload photos to Nixplay", type: "sunday" },
-            { id: 3, text: "Call insurance about claim", type: "never" }
-        ],
-        learning: [
-            { id: 4, text: "Read BBC News", type: "wednesday" },
-            { id: 5, text: "Check music blog - Pitchfork", type: "friday" },
-            { id: 6, text: "Review Twitter account @interesting", type: "monthly" },
-            { id: 7, text: "Research meditation apps", type: "never" }
-        ],
-        construction: [
-            { id: 8, text: "Research kitchen cabinet handles", type: "saturday" },
-            { id: 9, text: "Call contractor about timeline", type: "thursday" },
-            { id: 10, text: "Pick paint colors for bedroom", type: "weekends" }
-        ]
+        comms: [{ id: 1, text: "Clear email inbox", type: "weekdays" }],
+        learning: [{ id: 2, text: "Read BBC News", type: "wednesday" }],
+        construction: [{ id: 3, text: "Research kitchen handles", type: "saturday" }]
     };
-
     let rules = {
-        comms: { 
-            monday: 1, tuesday: 1, wednesday: 0, thursday: 1, friday: 1, saturday: 0, sunday: 0 
-        },
-        learning: { 
-            monday: 1, tuesday: 1, wednesday: 2, thursday: 1, friday: 1, saturday: 1, sunday: 1 
-        },
-        construction: { 
-            monday: 0, tuesday: 0, wednesday: 0, thursday: 1, friday: 0, saturday: 2, sunday: 1 
-        }
+        comms: { monday: 1, tuesday: 1, wednesday: 0, thursday: 1, friday: 1, saturday: 0, sunday: 0 },
+        learning: { monday: 1, tuesday: 1, wednesday: 2, thursday: 1, friday: 1, saturday: 1, sunday: 1 },
+        construction: { monday: 0, tuesday: 0, wednesday: 0, thursday: 1, friday: 0, saturday: 2, sunday: 1 }
     };
+    let rotationIndex = { comms: 0, learning: 0, construction: 0 };
 
-    let rotationIndex = {
-        comms: 0,
-        learning: 0,
-        construction: 0
-    };
-
-    // Authentication functions
     async function signUp() {
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
-        
-        if (!email || !password) {
-            alert('Please fill in all fields');
+        if (!email || !password || password.length < 6) {
+            alert('Please fill in all fields with password 6+ characters');
             return;
         }
-        
-        if (password.length < 6) {
-            alert('Password must be at least 6 characters');
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-            });
-            
-            if (error) {
-                alert('Error: ' + error.message);
-            } else {
-                alert('Check your email for verification link!');
-            }
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) alert('Error: ' + error.message);
+        else alert('Check your email for verification link!');
     }
 
     async function signIn() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
-        if (!email || !password) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-            
-            if (error) {
-                alert('Error: ' + error.message);
-            }
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
+        if (!email || !password) return alert('Please fill in all fields');
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) alert('Error: ' + error.message);
     }
 
     async function signOut() {
@@ -526,102 +188,40 @@
         document.getElementById('loginForm').style.display = 'block';
     }
 
-    // Save data to Supabase
     async function saveDataToSupabase() {
-        if (!currentUser) {
-            console.log('No user logged in, not saving');
-            return;
-        }
-        
-        console.log('Saving data to Supabase...');
-        
-        const userData = {
-            user_id: currentUser.id,
-            categories: categories,
-            tasks: tasks,
-            rules: rules,
-            rotation_index: rotationIndex,
-            updated_at: new Date().toISOString()
-        };
-        
-        try {
-            const { data, error } = await supabase
-                .from('user_data')
-                .upsert(userData, {
-                    onConflict: 'user_id'
-                });
-            
-            if (error) {
-                console.error('Error saving data:', error);
-                alert('Error saving data: ' + error.message);
-            } else {
-                console.log('Data saved successfully');
-            }
-        } catch (err) {
-            console.error('Error saving data:', err);
-            alert('Error saving data: ' + err.message);
-        }
+        if (!currentUser) return;
+        const userData = { user_id: currentUser.id, categories, tasks, rules, rotation_index: rotationIndex, updated_at: new Date().toISOString() };
+        const { data: updateData, error: updateError } = await supabase.from('user_data').update(userData).eq('user_id', currentUser.id);
+        if (updateError && updateError.code === 'PGRST116') {
+            const { data: insertData, error: insertError } = await supabase.from('user_data').insert(userData);
+            if (insertError) console.error('Error inserting:', insertError);
+        } else if (updateError) console.error('Error updating:', updateError);
     }
 
-    // Load data from Supabase
     async function loadDataFromSupabase() {
-        if (!currentUser) {
-            console.log('No user logged in, not loading');
-            return;
-        }
-        
-        console.log('Loading data from Supabase...');
-        
-        try {
-            const { data, error } = await supabase
-                .from('user_data')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .single();
-            
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error loading data:', error);
-                return;
-            }
-            
-            if (data) {
-                console.log('Data loaded successfully:', data);
-                
-                if (data.categories) categories = data.categories;
-                if (data.tasks) tasks = data.tasks;
-                if (data.rules) rules = data.rules;
-                if (data.rotation_index) rotationIndex = data.rotation_index;
-                
-                // Refresh the interface
-                updateCategoryDropdown();
-                renderDailyView();
-                renderLimitsSection();
-                renderTaskList();
-                renderCategoryList();
-                loadLimitsIntoForm();
-            } else {
-                console.log('No saved data found, using defaults');
-            }
-        } catch (err) {
-            console.error('Error loading data:', err);
+        if (!currentUser) return;
+        const { data, error } = await supabase.from('user_data').select('*').eq('user_id', currentUser.id).single();
+        if (data) {
+            if (data.categories) categories = data.categories;
+            if (data.tasks) tasks = data.tasks;
+            if (data.rules) rules = data.rules;
+            if (data.rotation_index) rotationIndex = data.rotation_index;
+            updateCategoryDropdown();
+            renderDailyView();
+            renderLimitsSection();
+            renderTaskList();
+            renderCategoryList();
         }
     }
 
-    // Listen for auth changes
     supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
         if (session?.user) {
             currentUser = session.user;
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('userEmail').textContent = currentUser.email;
             document.getElementById('userInfo').style.display = 'block';
             document.getElementById('logoutNavBtn').style.display = 'block';
-            
-            // Small delay to ensure user is fully authenticated
-            setTimeout(async () => {
-                await loadDataFromSupabase();
-            }, 100);
+            setTimeout(() => loadDataFromSupabase(), 100);
         } else {
             currentUser = null;
             document.getElementById('authSection').style.display = 'block';
@@ -632,201 +232,94 @@
     });
 
     function getCurrentDate() {
-        const today = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        };
-        return today.toLocaleDateString('en-US', options);
-    }
-
-    function isWeekend() {
-        const today = new Date();
-        const day = today.getDay();
-        return day === 0 || day === 6;
+        return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
 
     function shouldTaskAppearToday(task) {
         const today = new Date();
         const dayOfWeek = today.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const isWeekday = !isWeekend;
-        
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const todayName = dayNames[dayOfWeek];
         
         switch (task.type) {
-            case 'never':
-                return false;
-            case 'daily':
-                return true;
-            case 'weekdays':
-                return isWeekday;
-            case 'weekends':
-                return isWeekend;
-            case 'monday':
-            case 'tuesday':
-            case 'wednesday':
-            case 'thursday':
-            case 'friday':
-            case 'saturday':
-            case 'sunday':
+            case 'never': return false;
+            case 'daily': return true;
+            case 'weekdays': return dayOfWeek >= 1 && dayOfWeek <= 5;
+            case 'weekends': return dayOfWeek === 0 || dayOfWeek === 6;
+            case 'monday': case 'tuesday': case 'wednesday': case 'thursday': case 'friday': case 'saturday': case 'sunday':
                 return task.type === todayName;
-            case 'weekly':
-            case 'biweekly':
-            case 'monthly':
-            case 'quarterly':
-            case 'biannual':
-            case 'yearly':
-                return Math.random() > 0.7;
-            default:
-                return false;
+            default: return Math.random() > 0.7;
         }
-    }
-
-    function getCurrentDayName() {
-        const today = new Date();
-        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        return dayNames[today.getDay()];
     }
 
     function generateDailyTasks() {
-        const currentDay = getCurrentDayName();
+        const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
         const dailyTasks = {};
-
         for (const [category, categoryTasks] of Object.entries(tasks)) {
             dailyTasks[category] = [];
             const limit = rules[category][currentDay] || 0;
-            
             if (limit > 0 && categoryTasks.length > 0) {
                 const availableTasks = categoryTasks.filter(task => shouldTaskAppearToday(task));
-                
                 for (let i = 0; i < Math.min(limit, availableTasks.length); i++) {
                     const taskIndex = (rotationIndex[category] + i) % availableTasks.length;
-                    if (availableTasks[taskIndex]) {
-                        dailyTasks[category].push(availableTasks[taskIndex]);
-                    }
-                }
-                
-                if (availableTasks.length > 0) {
-                    rotationIndex[category] = (rotationIndex[category] + limit) % availableTasks.length;
+                    if (availableTasks[taskIndex]) dailyTasks[category].push(availableTasks[taskIndex]);
                 }
             }
         }
-
         return dailyTasks;
-    }
-
-    function generateRandomColor() {
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dda0dd', '#98d8c8', '#f7dc6f', '#bb8fce', '#85c1e9'];
-        return colors[Math.floor(Math.random() * colors.length)];
     }
 
     function addCategory() {
         const name = document.getElementById('newCategoryInput').value.trim();
         const icon = document.getElementById('newCategoryIcon').value.trim() || '📋';
-        
         if (name) {
             const categoryId = name.toLowerCase().replace(/\s+/g, '');
-            
-            categories[categoryId] = {
-                name: name,
-                icon: icon,
-                color: generateRandomColor()
-            };
-            
+            categories[categoryId] = { name, icon, color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'][Math.floor(Math.random() * 5)] };
             tasks[categoryId] = [];
-            
-            rules[categoryId] = { 
-                monday: 1, tuesday: 1, wednesday: 1, thursday: 1, 
-                friday: 1, saturday: 1, sunday: 1 
-            };
-            
+            rules[categoryId] = { monday: 1, tuesday: 1, wednesday: 1, thursday: 1, friday: 1, saturday: 1, sunday: 1 };
             rotationIndex[categoryId] = 0;
-            
             document.getElementById('newCategoryInput').value = '';
             document.getElementById('newCategoryIcon').value = '';
-            
             updateCategoryDropdown();
             renderDailyView();
             renderLimitsSection();
             renderCategoryList();
-            
             saveDataToSupabase();
-            
-            const btn = event.target;
-            const originalText = btn.textContent;
-            btn.textContent = 'Added!';
-            setTimeout(() => {
-                btn.textContent = originalText;
-            }, 1500);
         }
     }
 
     function deleteCategory(categoryId) {
-        // Don't allow deleting if it's the only category
-        if (Object.keys(categories).length <= 1) {
-            alert('You must have at least one category');
-            return;
-        }
-        
-        // Confirm deletion
+        if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
         const categoryName = categories[categoryId].name;
         const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-        
-        if (taskCount > 0) {
-            if (!confirm(`Delete "${categoryName}" category? This will also delete ${taskCount} task(s) in this category.`)) {
-                return;
-            }
-        } else {
-            if (!confirm(`Delete "${categoryName}" category?`)) {
-                return;
-            }
-        }
-        
-        // Delete the category and its data
+        if (!confirm(`Delete "${categoryName}" category?${taskCount > 0 ? ` This will delete ${taskCount} tasks.` : ''}`)) return;
         delete categories[categoryId];
         delete tasks[categoryId];
         delete rules[categoryId];
         delete rotationIndex[categoryId];
-        
-        // Refresh the interface
         updateCategoryDropdown();
         renderDailyView();
         renderLimitsSection();
         renderCategoryList();
         renderTaskList();
-        loadLimitsIntoForm();
-        
-        // Save to Supabase
         saveDataToSupabase();
     }
 
     function renderCategoryList() {
         const container = document.getElementById('categoryList');
         container.innerHTML = '';
-
         for (const [categoryId, category] of Object.entries(categories)) {
             const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-            const categoryElement = document.createElement('div');
-            categoryElement.className = 'task-list-item';
-            categoryElement.innerHTML = `
-                <span style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 16px;">${category.icon}</span>
-                    <span>${category.name} (${taskCount} tasks)</span>
-                </span>
-                <button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>
-            `;
-            container.appendChild(categoryElement);
+            const div = document.createElement('div');
+            div.className = 'task-list-item';
+            div.innerHTML = `<span>${category.icon} ${category.name} (${taskCount} tasks)</span><button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>`;
+            container.appendChild(div);
         }
     }
 
     function updateCategoryDropdown() {
         const dropdown = document.getElementById('taskCategory');
         dropdown.innerHTML = '';
-        
         for (const [categoryId, category] of Object.entries(categories)) {
             const option = document.createElement('option');
             option.value = categoryId;
@@ -836,99 +329,57 @@
     }
 
     function renderDailyView() {
-        const dailyViewContent = document.getElementById('dailyView');
+        const content = document.getElementById('dailyView');
         const dailyTasks = generateDailyTasks();
-        
-        dailyViewContent.innerHTML = '';
-        
+        content.innerHTML = '';
         for (const [categoryId, category] of Object.entries(categories)) {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'task-section';
-            
-            sectionDiv.innerHTML = `
-                <div class="section-header">
-                    <div class="section-icon" style="background: ${category.color}">${category.icon}</div>
-                    <div class="section-title">${category.name}</div>
-                </div>
-                <div id="${categoryId}Tasks"></div>
-            `;
-            
-            dailyViewContent.appendChild(sectionDiv);
-            
-            const container = document.getElementById(`${categoryId}Tasks`);
             const categoryTasks = dailyTasks[categoryId] || [];
-            
+            const section = document.createElement('div');
+            section.className = 'task-section';
+            section.innerHTML = `<div class="section-header"><div class="section-icon" style="background: ${category.color}">${category.icon}</div><div class="section-title">${category.name}</div></div>`;
+            const tasksContainer = document.createElement('div');
             if (categoryTasks.length === 0) {
-                container.innerHTML = '<div class="task-item" style="opacity: 0.6; font-style: italic;">No tasks today - you\'re good!</div>';
+                tasksContainer.innerHTML = '<div class="task-item" style="opacity: 0.6; font-style: italic;">No tasks today!</div>';
             } else {
                 categoryTasks.forEach(task => {
-                    const taskElement = document.createElement('div');
-                    taskElement.className = 'task-item';
-                    taskElement.style.borderLeftColor = category.color;
-                    taskElement.innerHTML = `
-                        <div class="task-text">${task.text}</div>
-                        <div class="task-meta">
-                            <span class="task-type">${task.type}</span>
-                            <button class="complete-btn" onclick="completeTask(${task.id})">Done</button>
-                        </div>
-                    `;
-                    container.appendChild(taskElement);
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'task-item';
+                    taskDiv.style.borderLeftColor = category.color;
+                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn">Done</button></div>`;
+                    tasksContainer.appendChild(taskDiv);
                 });
             }
+            section.appendChild(tasksContainer);
+            content.appendChild(section);
         }
-        
-        const statsDiv = document.createElement('div');
-        statsDiv.className = 'stats';
-        statsDiv.innerHTML = '<div class="stats-text">Perfect! Today\'s list respects your limits and helps you make progress.</div>';
-        dailyViewContent.appendChild(statsDiv);
     }
 
     function renderLimitsSection() {
-        const setupView = document.getElementById('setupView');
-        const limitsContainer = setupView.querySelector('.task-section');
-        if (!limitsContainer) return;
-        
-        let limitsHTML = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits by Day</div>';
-        
+        const container = document.getElementById('limitsSection');
+        let html = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits</div>';
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
         for (const [categoryId, category] of Object.entries(categories)) {
-            limitsHTML += `<div class="form-group"><label class="form-label">${category.name} Tasks</label>`;
-            
+            html += `<div class="form-group"><label class="form-label">${category.name}</label>`;
             for (let i = 0; i < days.length; i++) {
                 const dayKey = dayKeys[i];
-                const dayName = days[i];
-                limitsHTML += `
-                    <div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
-                        <div style="width: 80px; font-size: 13px; color: #666;">${dayName}</div>
-                        <div style="flex: 1;">
-                            <input type="number" class="form-input" id="${categoryId}${dayKey}" min="0" max="10" value="${rules[categoryId][dayKey]}" style="padding: 8px;">
-                        </div>
-                    </div>
-                `;
+                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;"><div style="width: 80px; font-size: 13px;">${days[i]}</div><input type="number" class="form-input" id="${categoryId}${dayKey}" min="0" max="10" value="${rules[categoryId][dayKey]}" style="padding: 8px;"></div>`;
             }
-            
-            limitsHTML += '</div>';
+            html += '</div>';
         }
-        
-        limitsHTML += '<button class="add-btn" onclick="updateLimits()">Update Limits</button>';
-        limitsContainer.innerHTML = limitsHTML;
+        html += '<button class="add-btn" onclick="updateLimits()">Update Limits</button>';
+        container.innerHTML = html;
     }
 
     function renderTaskList() {
         const container = document.getElementById('taskList');
         container.innerHTML = '';
-
         for (const [category, categoryTasks] of Object.entries(tasks)) {
             categoryTasks.forEach(task => {
-                const taskElement = document.createElement('div');
-                taskElement.className = 'task-list-item';
-                taskElement.innerHTML = `
-                    <span>${task.text} (${category}, ${task.type})</span>
-                    <button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>
-                `;
-                container.appendChild(taskElement);
+                const div = document.createElement('div');
+                div.className = 'task-list-item';
+                div.innerHTML = `<span>${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
+                container.appendChild(div);
             });
         }
     }
@@ -937,15 +388,8 @@
         const text = document.getElementById('newTaskInput').value.trim();
         const category = document.getElementById('taskCategory').value;
         const type = document.getElementById('taskType').value;
-
         if (text) {
-            const newTask = {
-                id: Date.now(),
-                text: text,
-                type: type
-            };
-            
-            tasks[category].push(newTask);
+            tasks[category].push({ id: Date.now(), text, type });
             document.getElementById('newTaskInput').value = '';
             renderTaskList();
             saveDataToSupabase();
@@ -959,89 +403,41 @@
         saveDataToSupabase();
     }
 
-    function completeTask(taskId) {
-        event.target.textContent = '✓';
-        event.target.style.background = '#28a745';
-        setTimeout(() => {
-            renderDailyView();
-        }, 1000);
-    }
-
     function updateLimits() {
         const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
         for (const categoryId of Object.keys(categories)) {
             for (const dayKey of dayKeys) {
                 const input = document.getElementById(`${categoryId}${dayKey}`);
-                if (input) {
-                    rules[categoryId][dayKey] = parseInt(input.value) || 0;
-                }
+                if (input) rules[categoryId][dayKey] = parseInt(input.value) || 0;
             }
         }
-        
         saveDataToSupabase();
-        
-        const btn = event.target;
-        const originalText = btn.textContent;
-        btn.textContent = 'Updated!';
-        setTimeout(() => {
-            btn.textContent = originalText;
-        }, 1500);
-    }
-
-    function loadLimitsIntoForm() {
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        for (const categoryId of Object.keys(categories)) {
-            for (const dayKey of dayKeys) {
-                const input = document.getElementById(`${categoryId}${dayKey}`);
-                if (input && rules[categoryId] && rules[categoryId][dayKey] !== undefined) {
-                    input.value = rules[categoryId][dayKey];
-                }
-            }
-        }
     }
 
     function showView(viewName) {
-        document.querySelectorAll('.view-section').forEach(section => {
-            section.style.display = 'none';
-        });
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
+        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         if (viewName === 'daily') {
             document.getElementById('dailyView').style.display = 'block';
             event.target.classList.add('active');
             renderDailyView();
         } else if (viewName === 'setup') {
             document.getElementById('setupView').style.display = 'block';
-            document.getElementById('setupView').classList.add('active');
             event.target.classList.add('active');
             updateCategoryDropdown();
             renderTaskList();
             renderLimitsSection();
             renderCategoryList();
-            loadLimitsIntoForm();
         }
     }
 
-    // Initialize the app
     document.getElementById('currentDate').textContent = getCurrentDate();
     updateCategoryDropdown();
     renderDailyView();
     renderCategoryList();
-
-    // Allow Enter key to add tasks
-    document.getElementById('newTaskInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            addTask();
-        }
-    });
+    document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
 </script>
 ```
 
-</body>
-</html>
 </body>
 </html>
