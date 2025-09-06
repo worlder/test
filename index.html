@@ -120,6 +120,82 @@
                 <div class="section-title" style="margin-bottom: 15px;">Current Tasks</div>
                 <div id="taskList" class="task-list"></div>
             </div>
+
+            <!-- Task Editor Modal -->
+            <div id="taskEditor" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 20px; width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <button onclick="closeTaskEditor()" style="background: none; border: none; color: #007bff; font-size: 16px;">Cancel</button>
+                        <h3 style="margin: 0;">Edit Task</h3>
+                        <button onclick="saveTaskEdit()" style="background: none; border: none; color: #007bff; font-size: 16px; font-weight: 600;">Save</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Task Name</label>
+                        <input type="text" class="form-input" id="editTaskText" placeholder="Enter task description">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Frequency</label>
+                        <select class="form-input" id="editTaskFrequency" onchange="updateFrequencyOptions()">
+                            <option value="never">Never (One-time)</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+
+                    <div id="frequencyDetails" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Every</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" class="form-input" id="frequencyInterval" min="1" max="100" value="1" style="width: 80px;">
+                                <select class="form-input" id="frequencyUnit">
+                                    <option value="days">Days</option>
+                                    <option value="weeks">Weeks</option>
+                                    <option value="months">Months</option>
+                                    <option value="years">Years</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="weeklyOptions" style="display: none;">
+                            <label class="form-label">Days of Week</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 15px;">
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_sunday"> Sunday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_monday"> Monday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_tuesday"> Tuesday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_wednesday"> Wednesday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_thursday"> Thursday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_friday"> Friday</label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="day_saturday"> Saturday</label>
+                            </div>
+                        </div>
+
+                        <div id="monthlyOptions" style="display: none;">
+                            <label class="form-label">Day of Month</label>
+                            <select class="form-input" id="monthlyDay">
+                                <option value="1">1st</option>
+                                <option value="15">15th</option>
+                                <option value="last">Last day</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Scheduling</label>
+                        <select class="form-input" id="schedulingType">
+                            <option value="fixed">On Calendar Schedule</option>
+                            <option value="completion">From Last Completion</option>
+                        </select>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;" id="schedulingHelp">
+                            Fixed: Regular schedule regardless of completion. From Last: Next occurrence based on when you actually complete the task.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="nav-buttons">
@@ -153,6 +229,8 @@
         construction: { monday: 0, tuesday: 0, wednesday: 0, thursday: 1, friday: 0, saturday: 2, sunday: 1 }
     };
     let rotationIndex = { comms: 0, learning: 0, construction: 0 };
+
+    let currentEditingTask = null;
 
     async function signUp() {
         const email = document.getElementById('signupEmail').value;
@@ -241,6 +319,40 @@
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const todayName = dayNames[dayOfWeek];
         
+        // Handle advanced frequency data
+        if (task.frequencyData) {
+            const data = task.frequencyData;
+            
+            if (data.frequency === 'never') return false;
+            
+            // Check if task is scheduled from completion
+            if (data.scheduling === 'completion' && task.lastCompleted) {
+                const lastCompleted = new Date(task.lastCompleted);
+                const daysSinceCompletion = Math.floor((today - lastCompleted) / (1000 * 60 * 60 * 24));
+                
+                let intervalDays = data.interval;
+                if (data.unit === 'weeks') intervalDays *= 7;
+                else if (data.unit === 'months') intervalDays *= 30; // Approximate
+                else if (data.unit === 'years') intervalDays *= 365;
+                
+                return daysSinceCompletion >= intervalDays;
+            }
+            
+            // Handle weekly tasks with specific days
+            if ((data.frequency === 'weekly' || data.unit === 'weeks') && data.daysOfWeek) {
+                return data.daysOfWeek.includes(todayName);
+            }
+            
+            // Handle daily tasks
+            if (data.frequency === 'daily' || data.unit === 'days') {
+                return true; // For now, simplified daily logic
+            }
+            
+            // Handle other frequencies with random appearance for demo
+            return Math.random() > 0.7;
+        }
+        
+        // Fallback to original logic for simple types
         switch (task.type) {
             case 'never': return false;
             case 'daily': return true;
@@ -345,13 +457,28 @@
                     const taskDiv = document.createElement('div');
                     taskDiv.className = 'task-item';
                     taskDiv.style.borderLeftColor = category.color;
-                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn">Done</button></div>`;
+                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn" onclick="completeTask('${categoryId}', ${task.id})">Done</button></div>`;
                     tasksContainer.appendChild(taskDiv);
                 });
             }
             section.appendChild(tasksContainer);
             content.appendChild(section);
         }
+    }
+
+    function completeTask(category, taskId) {
+        const task = tasks[category].find(t => t.id === taskId);
+        if (task) {
+            // Mark completion date for "From Last Completion" scheduling
+            task.lastCompleted = new Date().toISOString();
+            saveDataToSupabase();
+        }
+        
+        event.target.textContent = '✓';
+        event.target.style.background = '#28a745';
+        setTimeout(() => {
+            renderDailyView();
+        }, 1000);
     }
 
     function renderLimitsSection() {
@@ -378,10 +505,116 @@
             categoryTasks.forEach(task => {
                 const div = document.createElement('div');
                 div.className = 'task-list-item';
-                div.innerHTML = `<span>${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
+                div.style.cursor = 'pointer';
+                div.innerHTML = `<span onclick="editTask('${category}', ${task.id})">${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
                 container.appendChild(div);
             });
         }
+    }
+
+    function editTask(category, taskId) {
+        const task = tasks[category].find(t => t.id === taskId);
+        if (!task) return;
+        
+        currentEditingTask = { category, taskId, task };
+        
+        // Populate form
+        document.getElementById('editTaskText').value = task.text;
+        document.getElementById('editTaskFrequency').value = task.frequency || 'weekly';
+        
+        // Parse advanced frequency if it exists
+        if (task.frequencyData) {
+            const data = task.frequencyData;
+            document.getElementById('frequencyInterval').value = data.interval || 1;
+            document.getElementById('frequencyUnit').value = data.unit || 'weeks';
+            document.getElementById('schedulingType').value = data.scheduling || 'fixed';
+            
+            if (data.daysOfWeek) {
+                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                    const checkbox = document.getElementById(`day_${day}`);
+                    if (checkbox) checkbox.checked = data.daysOfWeek.includes(day);
+                });
+            }
+        }
+        
+        updateFrequencyOptions();
+        document.getElementById('taskEditor').style.display = 'block';
+    }
+
+    function closeTaskEditor() {
+        document.getElementById('taskEditor').style.display = 'none';
+        currentEditingTask = null;
+    }
+
+    function updateFrequencyOptions() {
+        const frequency = document.getElementById('editTaskFrequency').value;
+        const details = document.getElementById('frequencyDetails');
+        const weeklyOptions = document.getElementById('weeklyOptions');
+        const monthlyOptions = document.getElementById('monthlyOptions');
+        
+        if (frequency === 'never') {
+            details.style.display = 'none';
+        } else {
+            details.style.display = 'block';
+            
+            // Set default unit based on frequency
+            const unitSelect = document.getElementById('frequencyUnit');
+            if (frequency === 'daily') unitSelect.value = 'days';
+            else if (frequency === 'weekly') unitSelect.value = 'weeks';
+            else if (frequency === 'monthly') unitSelect.value = 'months';
+            else if (frequency === 'yearly') unitSelect.value = 'years';
+            
+            // Show/hide specific options
+            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
+            monthlyOptions.style.display = (frequency === 'monthly' || unitSelect.value === 'months') ? 'block' : 'none';
+        }
+    }
+
+    function saveTaskEdit() {
+        if (!currentEditingTask) return;
+        
+        const { category, taskId } = currentEditingTask;
+        const task = tasks[category].find(t => t.id === taskId);
+        if (!task) return;
+        
+        // Update basic info
+        task.text = document.getElementById('editTaskText').value.trim();
+        const frequency = document.getElementById('editTaskFrequency').value;
+        
+        // Build frequency data
+        const frequencyData = {
+            frequency: frequency,
+            interval: parseInt(document.getElementById('frequencyInterval').value) || 1,
+            unit: document.getElementById('frequencyUnit').value,
+            scheduling: document.getElementById('schedulingType').value
+        };
+        
+        // Handle days of week for weekly tasks
+        if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
+            const selectedDays = [];
+            ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                const checkbox = document.getElementById(`day_${day}`);
+                if (checkbox && checkbox.checked) selectedDays.push(day);
+            });
+            frequencyData.daysOfWeek = selectedDays;
+        }
+        
+        // Store the advanced frequency data
+        task.frequencyData = frequencyData;
+        
+        // Update the simple type for display compatibility
+        if (frequency === 'never') {
+            task.type = 'never';
+        } else if (frequencyData.interval === 1) {
+            task.type = frequency;
+        } else {
+            task.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
+        }
+        
+        closeTaskEditor();
+        renderTaskList();
+        renderDailyView();
+        saveDataToSupabase();
     }
 
     function addTask() {
