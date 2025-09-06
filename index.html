@@ -528,35 +528,49 @@
 
     // Save data to Supabase
     async function saveDataToSupabase() {
-        if (!currentUser) return;
+        if (!currentUser) {
+            console.log('No user logged in, not saving');
+            return;
+        }
+        
+        console.log('Saving data to Supabase...');
         
         const userData = {
+            user_id: currentUser.id,
             categories: categories,
             tasks: tasks,
             rules: rules,
-            rotation_index: rotationIndex
+            rotation_index: rotationIndex,
+            updated_at: new Date().toISOString()
         };
         
         try {
             const { data, error } = await supabase
                 .from('user_data')
-                .upsert({
-                    user_id: currentUser.id,
-                    ...userData,
-                    updated_at: new Date().toISOString()
+                .upsert(userData, {
+                    onConflict: 'user_id'
                 });
             
             if (error) {
                 console.error('Error saving data:', error);
+                alert('Error saving data: ' + error.message);
+            } else {
+                console.log('Data saved successfully');
             }
         } catch (err) {
             console.error('Error saving data:', err);
+            alert('Error saving data: ' + err.message);
         }
     }
 
     // Load data from Supabase
     async function loadDataFromSupabase() {
-        if (!currentUser) return;
+        if (!currentUser) {
+            console.log('No user logged in, not loading');
+            return;
+        }
+        
+        console.log('Loading data from Supabase...');
         
         try {
             const { data, error } = await supabase
@@ -571,6 +585,8 @@
             }
             
             if (data) {
+                console.log('Data loaded successfully:', data);
+                
                 if (data.categories) categories = data.categories;
                 if (data.tasks) tasks = data.tasks;
                 if (data.rules) rules = data.rules;
@@ -583,6 +599,8 @@
                 renderTaskList();
                 renderCategoryList();
                 loadLimitsIntoForm();
+            } else {
+                console.log('No saved data found, using defaults');
             }
         } catch (err) {
             console.error('Error loading data:', err);
@@ -591,6 +609,8 @@
 
     // Listen for auth changes
     supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
         if (session?.user) {
             currentUser = session.user;
             document.getElementById('authSection').style.display = 'none';
@@ -598,8 +618,10 @@
             document.getElementById('userInfo').style.display = 'block';
             document.getElementById('logoutNavBtn').style.display = 'block';
             
-            // Load user's data
-            await loadDataFromSupabase();
+            // Small delay to ensure user is fully authenticated
+            setTimeout(async () => {
+                await loadDataFromSupabase();
+            }, 100);
         } else {
             currentUser = null;
             document.getElementById('authSection').style.display = 'block';
