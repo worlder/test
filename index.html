@@ -524,12 +524,16 @@
             html += `<div class="form-group"><label class="form-label">${category.name}</label>`;
             for (let i = 0; i < days.length; i++) {
                 const dayKey = dayKeys[i];
-                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;"><div style="width: 80px; font-size: 13px;">${days[i]}</div><input type="number" class="form-input" id="${categoryId}${dayKey}" min="0" max="10" value="${rules[categoryId][dayKey]}" style="padding: 8px;"></div>`;
+                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;"><div style="width: 80px; font-size: 13px;">${days[i]}</div><input type="number" class="form-input" id="${categoryId}${dayKey}" min="0" max="10" value="${rules[categoryId][dayKey]}" style="padding: 8px;" oninput="updateLimitValue('${categoryId}', '${dayKey}', this.value)"></div>`;
             }
             html += '</div>';
         }
-        html += '<button class="add-btn" onclick="updateLimits()">Update Limits</button>';
         container.innerHTML = html;
+    }
+
+    function updateLimitValue(categoryId, dayKey, value) {
+        rules[categoryId][dayKey] = parseInt(value) || 0;
+        saveDataToSupabase();
     }
 
     function renderTaskList() {
@@ -754,17 +758,6 @@
         tasks[category] = tasks[category].filter(task => task.id !== taskId);
         renderTaskList();
         renderDailyView();
-        saveDataToSupabase();
-    }
-
-    function updateLimits() {
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        for (const categoryId of Object.keys(categories)) {
-            for (const dayKey of dayKeys) {
-                const input = document.getElementById(`${categoryId}${dayKey}`);
-                if (input) rules[categoryId][dayKey] = parseInt(input.value) || 0;
-            }
-        }
         saveDataToSupabase();
     }
 
