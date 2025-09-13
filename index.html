@@ -55,7 +55,19 @@
                     <input type="email" class="form-input" id="loginEmail" placeholder="Email">
                     <input type="password" class="form-input" id="loginPassword" placeholder="Password">
                     <button class="add-btn" onclick="signIn()">Sign In</button>
+                    <!-- Category Deletion Modal -->
+            <div id="categoryDeleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 20px; width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <button onclick="closeCategoryDeleteModal()" style="background: none; border: none; color: #007bff; font-size: 16px;">Cancel</button>
+                        <h3 style="margin: 0;">Delete Category</h3>
+                        <button onclick="confirmCategoryDelete()" style="background: none; border: none; color: #dc3545; font-size: 16px; font-weight: 600;">Delete</button>
+                    </div>
+                    
+                    <div id="categoryDeleteContent"></div>
                 </div>
+            </div>
+        </div>
                 <div class="auth-toggle" onclick="showSignUp()">Need an account? Sign up</div>
             </div>
             
@@ -390,21 +402,94 @@
         }
     }
 
+    let categoryToDelete = null;
+    let tasksToReassign = [];
+
     function deleteCategory(categoryId) {
         if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
+        
         const categoryName = categories[categoryId].name;
-        const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-        if (!confirm(`Delete "${categoryName}" category?${taskCount > 0 ? ` This will delete ${taskCount} tasks.` : ''}`)) return;
-        delete categories[categoryId];
-        delete tasks[categoryId];
-        delete rules[categoryId];
-        delete rotationIndex[categoryId];
+        const categoryTasks = tasks[categoryId] || [];
+        
+        categoryToDelete = categoryId;
+        tasksToReassign = [...categoryTasks];
+        
+        // Build modal content
+        let content = `<div style="margin-bottom: 20px; text-align: center;">
+            <div style="font-size: 18px; margin-bottom: 10px;">Delete "${categoryName}"?</div>
+        `;
+        
+        if (categoryTasks.length === 0) {
+            content += `<div style="color: #666;">This category has no tasks. It will be deleted permanently.</div>`;
+        } else {
+            content += `<div style="color: #666; margin-bottom: 15px;">This category has ${categoryTasks.length} task(s). Choose where to move each task:</div>`;
+            
+            // List other categories as options
+            const otherCategories = Object.keys(categories).filter(id => id !== categoryId);
+            
+            categoryTasks.forEach((task, index) => {
+                content += `<div style="background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                    <div style="font-size: 14px; margin-bottom: 8px; font-weight: 500;">${task.text}</div>
+                    <select class="form-input" id="reassign_${task.id}" style="padding: 8px; font-size: 13px;">
+                        <option value="DELETE">Delete this task</option>`;
+                
+                otherCategories.forEach(catId => {
+                    content += `<option value="${catId}">${categories[catId].name}</option>`;
+                });
+                
+                content += `</select></div>`;
+            });
+        }
+        
+        content += '</div>';
+        
+        document.getElementById('categoryDeleteContent').innerHTML = content;
+        document.getElementById('categoryDeleteModal').style.display = 'block';
+    }
+
+    function closeCategoryDeleteModal() {
+        document.getElementById('categoryDeleteModal').style.display = 'none';
+        categoryToDelete = null;
+        tasksToReassign = [];
+    }
+
+    function confirmCategoryDelete() {
+        if (!categoryToDelete) return;
+        
+        const categoryTasks = tasks[categoryToDelete] || [];
+        
+        // Process task reassignments
+        categoryTasks.forEach(task => {
+            const reassignSelect = document.getElementById(`reassign_${task.id}`);
+            if (reassignSelect) {
+                const newCategory = reassignSelect.value;
+                if (newCategory !== 'DELETE') {
+                    // Move task to new category
+                    if (!tasks[newCategory]) tasks[newCategory] = [];
+                    tasks[newCategory].push(task);
+                }
+                // If DELETE is selected, task is simply not moved anywhere
+            }
+        });
+        
+        // Delete the category
+        delete categories[categoryToDelete];
+        delete tasks[categoryToDelete];
+        delete rules[categoryToDelete];
+        delete rotationIndex[categoryToDelete];
+        
+        // Refresh interface
         updateCategoryDropdown();
         renderDailyView();
         renderLimitsSection();
         renderCategoryList();
         renderTaskList();
+        
+        // Save changes
         saveDataToSupabase();
+        
+        // Close modal
+        closeCategoryDeleteModal();
     }
 
     function renderCategoryList() {
