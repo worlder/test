@@ -4,477 +4,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Task Rotator</title>
+    <title>Task Reassignment Modal</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
-        .container { max-width: 400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px 20px; text-align: center; }
-        .title { font-size: 24px; font-weight: 600; }
-        .content { padding: 25px 20px; }
-        .task-section { margin-bottom: 25px; }
-        .section-header { display: flex; align-items: center; margin-bottom: 15px; }
-        .section-icon { width: 24px; height: 24px; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: 600; }
-        .section-title { font-size: 16px; font-weight: 600; color: #333; }
-        .task-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #e9ecef; transition: all 0.3s ease; }
-        .task-text { font-size: 15px; line-height: 1.4; color: #333; }
-        .task-meta { font-size: 12px; color: #666; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .task-type { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-        .complete-btn { background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        .nav-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .nav-btn { flex: 1; background: #6c757d; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; cursor: pointer; }
-        .nav-btn.active { background: #007bff; }
-        .setup-section { display: none; }
-        .setup-section.active { display: block; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #333; }
-        .form-input { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 14px; }
-        .add-btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .task-list { max-height: 200px; overflow-y: auto; margin-top: 15px; }
-        .task-list-item { background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-        .delete-btn { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
-        .auth-section { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
-        .auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .user-info { display: flex; justify-content: space-between; align-items: center; background: #e3f2fd; padding: 10px 15px; border-radius: 8px; font-size: 14px; }
-        .auth-toggle { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 14px; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div id="currentDate"></div>
-            <div class="title">Today's Focus</div>
-        </div>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
 ```
-    <div class="content">
-        <div id="authSection" class="auth-section">
-            <div id="loginForm">
-                <div style="font-weight: 600; margin-bottom: 10px;">Sign in to save your tasks</div>
-                <div class="auth-form">
-                    <input type="email" class="form-input" id="loginEmail" placeholder="Email">
-                    <input type="password" class="form-input" id="loginPassword" placeholder="Password">
-                    <button class="add-btn" onclick="signIn()">Sign In</button>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        animation: modalAppear 0.3s ease-out;
+    }
+
+    @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .warning-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        font-size: 24px;
+        color: white;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .modal-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .modal-body {
+        margin-bottom: 24px;
+    }
+
+    .instruction-text {
+        font-size: 16px;
+        color: #374151;
+        line-height: 1.5;
+        margin-bottom: 20px;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        border-left: 4px solid #3b82f6;
+    }
+
+    .tasks-container {
+        margin-bottom: 24px;
+    }
+
+    .tasks-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+    }
+
+    .tasks-count {
+        background: #ddd6fe;
+        color: #7c3aed;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+    }
+
+    .task-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+
+    .task-item:hover {
+        border-color: #d1d5db;
+    }
+
+    .task-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .task-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 4px;
+        word-break: break-word;
+    }
+
+    .task-details {
+        font-size: 13px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .category-select-container {
+        margin-left: 16px;
+        min-width: 140px;
+    }
+
+    .category-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .category-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .category-select.delete-option {
+        color: #dc2626;
+        border-color: #fca5a5;
+        background: #fef2f2;
+    }
+
+    .bulk-actions {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .bulk-actions-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 12px;
+    }
+
+    .bulk-action-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .bulk-action-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .bulk-select {
+        padding: 6px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        font-size: 13px;
+        min-width: 120px;
+    }
+
+    .bulk-btn {
+        padding: 6px 12px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .bulk-btn:hover {
+        background: #2563eb;
+    }
+
+    .summary-box {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .summary-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+    }
+
+    .summary-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+    }
+
+    .summary-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        font-size: 13px;
+        color: #78350f;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        min-width: 100px;
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+        background: #d1d5db;
+        color: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @media (max-width: 480px) {
+        .modal {
+            margin: 20px;
+            width: auto;
+            max-height: 90vh;
+        }
+        
+        .task-item {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        
+        .category-select-container {
+            margin-left: 0;
+            min-width: auto;
+        }
+        
+        .bulk-action-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .modal-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+
+        .summary-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="warning-icon">📋</div>
+                <div>
+                    <h2 class="modal-title">Reassign Tasks from "Test"</h2>
+                    <div class="modal-subtitle">Choose where to move each task before deleting this category</div>
                 </div>
-                <div class="auth-toggle" onclick="showSignUp()">Need an account? Sign up</div>
+            </div>
+
+```
+        <div class="modal-body">
+            <div class="instruction-text">
+                Select a new category for each task below, or choose "Delete" to permanently remove individual tasks. The "Test" category will be deleted once you proceed.
+            </div>
+
+            <div class="bulk-actions">
+                <div class="bulk-actions-title">Quick Actions</div>
+                <div class="bulk-action-row">
+                    <span style="font-size: 13px; color: #6b7280;">Move all tasks to:</span>
+                    <select class="bulk-select" id="bulkCategory">
+                        <option value="">Select category...</option>
+                        <option value="work">Work</option>
+                        <option value="personal">Personal</option>
+                        <option value="shopping">Shopping</option>
+                    </select>
+                    <button class="bulk-btn" onclick="applyBulkAction()">Apply to All</button>
+                </div>
             </div>
             
-            <div id="signupForm" style="display: none;">
-                <div style="font-weight: 600; margin-bottom: 10px;">Create your account</div>
-                <div class="auth-form">
-                    <input type="email" class="form-input" id="signupEmail" placeholder="Email">
-                    <input type="password" class="form-input" id="signupPassword" placeholder="Password (min 6 characters)">
-                    <button class="add-btn" onclick="signUp()">Sign Up</button>
+            <div class="tasks-container">
+                <div class="tasks-title">
+                    Tasks to Reassign
+                    <span class="tasks-count">3 tasks</span>
                 </div>
-                <div class="auth-toggle" onclick="showSignIn()">Already have an account? Sign in</div>
+                
+                <div class="task-item">
+                    <div class="task-info">
+                        <div class="task-name">Complete user testing for new feature</div>
+                        <div class="task-details">
+                            <div class="task-meta">
+                                <span>📅 Due: Today</span>
+                            </div>
+                            <div class="task-meta">
+                                <span>⚡ Priority: High</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="category-select-container">
+                        <select class="category-select" data-task="1">
+                            <option value="">Choose destination...</option>
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="delete" class="delete-option">🗑️ Delete this task</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-info">
+                        <div class="task-name">Review and update documentation</div>
+                        <div class="task-details">
+                            <div class="task-meta">
+                                <span>📅 Due: Tomorrow</span>
+                            </div>
+                            <div class="task-meta">
+                                <span>⚡ Priority: Medium</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="category-select-container">
+                        <select class="category-select" data-task="2">
+                            <option value="">Choose destination...</option>
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="delete" class="delete-option">🗑️ Delete this task</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="task-item">
+                    <div class="task-info">
+                        <div class="task-name">Set up testing environment</div>
+                        <div class="task-details">
+                            <div class="task-meta">
+                                <span>📅 Due: Next week</span>
+                            </div>
+                            <div class="task-meta">
+                                <span>⚡ Priority: Low</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="category-select-container">
+                        <select class="category-select" data-task="3">
+                            <option value="">Choose destination...</option>
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="delete" class="delete-option">🗑️ Delete this task</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            
-            <div id="userInfo" style="display: none;">
-                <div class="user-info">
-                    <span id="userEmail"></span>
-                    <button class="delete-btn" onclick="signOut()">Sign Out</button>
+
+            <div class="summary-box">
+                <div class="summary-title">
+                    <svg class="summary-icon" fill="#92400e" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    Summary of Changes
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span>Moving to categories:</span>
+                        <strong id="movingCount">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Tasks to delete:</span>
+                        <strong id="deletingCount">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Unassigned tasks:</span>
+                        <strong id="unassignedCount">3</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span>Ready to proceed:</span>
+                        <strong id="readyStatus">No</strong>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div id="dailyView" class="view-section"></div>
-
-        <div id="setupView" class="view-section setup-section">
-            <div class="form-group">
-                <label class="form-label">Create New Category</label>
-                <input type="text" class="form-input" id="newCategoryInput" placeholder="Enter category name">
-                <input type="text" class="form-input" id="newCategoryIcon" placeholder="Enter emoji" style="margin-top: 8px;">
-                <button class="add-btn" onclick="addCategory()">Add Category</button>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Add New Task</label>
-                <input type="text" class="form-input" id="newTaskInput" placeholder="Enter task description">
-                <select class="form-input" id="taskCategory" style="margin-top: 8px;"></select>
-                <select class="form-input" id="taskType" style="margin-top: 8px;">
-                    <option value="never">Never</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekdays">Weekdays</option>
-                    <option value="weekends">Weekends</option>
-                    <option value="monday">Mondays only</option>
-                    <option value="tuesday">Tuesdays only</option>
-                    <option value="wednesday">Wednesdays only</option>
-                    <option value="thursday">Thursdays only</option>
-                    <option value="friday">Fridays only</option>
-                    <option value="saturday">Saturdays only</option>
-                    <option value="sunday">Sundays only</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                </select>
-                <button class="add-btn" onclick="addTask()">Add Task</button>
-            </div>
-
-            <div class="task-section">
-                <div class="section-title" style="margin-bottom: 15px;">Manage Categories</div>
-                <div id="categoryList" class="task-list"></div>
-            </div>
-
-            <div class="task-section" id="limitsSection"></div>
-
-            <div class="task-section">
-                <div class="section-title" style="margin-bottom: 15px;">Current Tasks</div>
-                <div id="taskList" class="task-list"></div>
-            </div>
-        </div>
-
-        <div class="nav-buttons">
-            <button class="nav-btn active" onclick="showView('daily')">Today</button>
-            <button class="nav-btn" onclick="showView('setup')">Setup</button>
-            <button class="nav-btn" onclick="signOut()" style="background: #dc3545;" id="logoutNavBtn">Sign Out</button>
+        
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" id="proceedBtn" disabled onclick="proceedWithDeletion()">
+                Reassign & Delete Category
+            </button>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const SUPABASE_URL = 'https://mpcioiimgrunrxzinhlu.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wY2lvaWltZ3J1bnJ4emluaGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDMyNTUsImV4cCI6MjA3MjY3OTI1NX0.HLEnWmw7RpNFrNePuvSr24ka0wXblPWiGYAaC65XYJg';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let taskAssignments = {};
 
-    let currentUser = null;
+    function updateSummary() {
+        const selects = document.querySelectorAll('.category-select');
+        let moving = 0;
+        let deleting = 0;
+        let unassigned = 0;
 
-    let categories = {
-        comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
-        learning: { name: 'Learning', icon: '📚', color: '#4ecdc4' },
-        construction: { name: 'Construction', icon: '🔨', color: '#45b7d1' }
-    };
-
-    let tasks = {
-        comms: [{ id: 1, text: "Clear email inbox", type: "weekdays" }],
-        learning: [{ id: 2, text: "Read BBC News", type: "wednesday" }],
-        construction: [{ id: 3, text: "Research kitchen handles", type: "saturday" }]
-    };
-
-    let rules = {
-        comms: { monday: 1, tuesday: 1, wednesday: 0, thursday: 1, friday: 1, saturday: 0, sunday: 0 },
-        learning: { monday: 1, tuesday: 1, wednesday: 2, thursday: 1, friday: 1, saturday: 1, sunday: 1 },
-        construction: { monday: 0, tuesday: 0, wednesday: 0, thursday: 1, friday: 0, saturday: 2, sunday: 1 }
-    };
-
-    let rotationIndex = { comms: 0, learning: 0, construction: 0 };
-
-    async function signUp() {
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-        if (!email || !password || password.length < 6) {
-            alert('Please fill in all fields with password 6+ characters');
-            return;
-        }
-        try {
-            const { data, error } = await supabase.auth.signUp({ email, password });
-            if (error) alert('Error: ' + error.message);
-            else alert('Check your email for verification link!');
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
-    }
-
-    async function signIn() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        if (!email || !password) return alert('Please fill in all fields');
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) alert('Error: ' + error.message);
-        } catch (err) {
-            alert('Error: ' + err.message);
-        }
-    }
-
-    async function signOut() {
-        await supabase.auth.signOut();
-    }
-
-    function showSignUp() {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'block';
-    }
-
-    function showSignIn() {
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    }
-
-    async function saveDataToSupabase() {
-        if (!currentUser) return;
-        const userData = { user_id: currentUser.id, categories, tasks, rules, rotation_index: rotationIndex, updated_at: new Date().toISOString() };
-        try {
-            const { data: updateData, error: updateError } = await supabase.from('user_data').update(userData).eq('user_id', currentUser.id);
-            if (updateError && updateError.code === 'PGRST116') {
-                const { data: insertData, error: insertError } = await supabase.from('user_data').insert(userData);
-                if (insertError) console.error('Error inserting:', insertError);
-            } else if (updateError) console.error('Error updating:', updateError);
-        } catch (err) {
-            console.error('Error saving:', err);
-        }
-    }
-
-    async function loadDataFromSupabase() {
-        if (!currentUser) return;
-        try {
-            const { data, error } = await supabase.from('user_data').select('*').eq('user_id', currentUser.id).single();
-            if (data) {
-                if (data.categories) categories = data.categories;
-                if (data.tasks) tasks = data.tasks;
-                if (data.rules) rules = data.rules;
-                if (data.rotation_index) rotationIndex = data.rotation_index;
-                updateCategoryDropdown();
-                renderDailyView();
-                renderLimitsSection();
-                renderTaskList();
-                renderCategoryList();
+        selects.forEach(select => {
+            const value = select.value;
+            const taskId = select.dataset.task;
+            
+            if (value === '') {
+                unassigned++;
+            } else if (value === 'delete') {
+                deleting++;
+                taskAssignments[taskId] = 'delete';
+            } else {
+                moving++;
+                taskAssignments[taskId] = value;
             }
-        } catch (err) {
-            console.error('Error loading:', err);
-        }
+        });
+
+        document.getElementById('movingCount').textContent = moving;
+        document.getElementById('deletingCount').textContent = deleting;
+        document.getElementById('unassignedCount').textContent = unassigned;
+        
+        const allAssigned = unassigned === 0;
+        document.getElementById('readyStatus').textContent = allAssigned ? 'Yes' : 'No';
+        document.getElementById('proceedBtn').disabled = !allAssigned;
+
+        // Update select styling for delete options
+        selects.forEach(select => {
+            if (select.value === 'delete') {
+                select.classList.add('delete-option');
+            } else {
+                select.classList.remove('delete-option');
+            }
+        });
     }
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-            currentUser = session.user;
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('userEmail').textContent = currentUser.email;
-            document.getElementById('userInfo').style.display = 'block';
-            document.getElementById('logoutNavBtn').style.display = 'block';
-            setTimeout(() => loadDataFromSupabase(), 100);
-        } else {
-            currentUser = null;
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('userInfo').style.display = 'none';
-            document.getElementById('logoutNavBtn').style.display = 'none';
-            showSignIn();
-        }
+    function applyBulkAction() {
+        const bulkCategory = document.getElementById('bulkCategory').value;
+        if (!bulkCategory) return;
+
+        const selects = document.querySelectorAll('.category-select');
+        selects.forEach(select => {
+            select.value = bulkCategory;
+        });
+        
+        updateSummary();
+    }
+
+    function closeModal() {
+        console.log('Modal closed');
+        // In real implementation, this would close the modal
+    }
+
+    function proceedWithDeletion() {
+        console.log('Task assignments:', taskAssignments);
+        
+        const moving = Object.values(taskAssignments).filter(v => v !== 'delete').length;
+        const deleting = Object.values(taskAssignments).filter(v => v === 'delete').length;
+        
+        console.log(`Moving ${moving} tasks, deleting ${deleting} tasks`);
+        console.log('Deleting "Test" category');
+        
+        // In real implementation, this would:
+        // 1. Move tasks to their assigned categories
+        // 2. Delete tasks marked for deletion
+        // 3. Delete the "Test" category
+        // 4. Update the UI
+    }
+
+    // Add event listeners to all select elements
+    document.querySelectorAll('.category-select').forEach(select => {
+        select.addEventListener('change', updateSummary);
     });
 
-    function getCurrentDate() {
-        return new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    function shouldTaskAppearToday(task) {
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        const todayName = dayNames[dayOfWeek];
-        
-        switch (task.type) {
-            case 'never': return false;
-            case 'daily': return true;
-            case 'weekdays': return dayOfWeek >= 1 && dayOfWeek <= 5;
-            case 'weekends': return dayOfWeek === 0 || dayOfWeek === 6;
-            case 'monday': case 'tuesday': case 'wednesday': case 'thursday': case 'friday': case 'saturday': case 'sunday':
-                return task.type === todayName;
-            default: return Math.random() > 0.7;
-        }
-    }
-
-    function generateDailyTasks() {
-        const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
-        const dailyTasks = {};
-        
-        for (const [category, categoryTasks] of Object.entries(tasks)) {
-            dailyTasks[category] = [];
-            const limit = rules[category][currentDay];
-            
-            if (limit === -1) {
-                const availableTasks = categoryTasks.filter(task => shouldTaskAppearToday(task));
-                dailyTasks[category] = availableTasks;
-            } else if (limit > 0 && categoryTasks.length > 0) {
-                const availableTasks = categoryTasks.filter(task => shouldTaskAppearToday(task));
-                for (let i = 0; i < Math.min(limit, availableTasks.length); i++) {
-                    const taskIndex = (rotationIndex[category] + i) % availableTasks.length;
-                    if (availableTasks[taskIndex]) dailyTasks[category].push(availableTasks[taskIndex]);
-                }
-            }
-        }
-        return dailyTasks;
-    }
-
-    function addCategory() {
-        const name = document.getElementById('newCategoryInput').value.trim();
-        const icon = document.getElementById('newCategoryIcon').value.trim() || '📋';
-        if (name) {
-            const categoryId = name.toLowerCase().replace(/\s+/g, '');
-            categories[categoryId] = { name, icon, color: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'][Math.floor(Math.random() * 5)] };
-            tasks[categoryId] = [];
-            rules[categoryId] = { monday: 1, tuesday: 1, wednesday: 1, thursday: 1, friday: 1, saturday: 1, sunday: 1 };
-            rotationIndex[categoryId] = 0;
-            document.getElementById('newCategoryInput').value = '';
-            document.getElementById('newCategoryIcon').value = '';
-            updateCategoryDropdown();
-            renderDailyView();
-            renderLimitsSection();
-            renderCategoryList();
-            saveDataToSupabase();
-        }
-    }
-
-    function deleteCategory(categoryId) {
-        if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
-        const categoryName = categories[categoryId].name;
-        const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-        if (!confirm(`Delete "${categoryName}" category?${taskCount > 0 ? ` This will delete ${taskCount} tasks.` : ''}`)) return;
-        delete categories[categoryId];
-        delete tasks[categoryId];
-        delete rules[categoryId];
-        delete rotationIndex[categoryId];
-        updateCategoryDropdown();
-        renderDailyView();
-        renderLimitsSection();
-        renderCategoryList();
-        renderTaskList();
-        saveDataToSupabase();
-    }
-
-    function renderCategoryList() {
-        const container = document.getElementById('categoryList');
-        container.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-            const div = document.createElement('div');
-            div.className = 'task-list-item';
-            div.innerHTML = `<span>${category.icon} ${category.name} (${taskCount} tasks)</span><button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>`;
-            container.appendChild(div);
-        }
-    }
-
-    function updateCategoryDropdown() {
-        const dropdown = document.getElementById('taskCategory');
-        dropdown.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const option = document.createElement('option');
-            option.value = categoryId;
-            option.textContent = category.name;
-            dropdown.appendChild(option);
-        }
-    }
-
-    function renderDailyView() {
-        const content = document.getElementById('dailyView');
-        const dailyTasks = generateDailyTasks();
-        content.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const categoryTasks = dailyTasks[categoryId] || [];
-            const section = document.createElement('div');
-            section.className = 'task-section';
-            section.innerHTML = `<div class="section-header"><div class="section-icon" style="background: ${category.color}">${category.icon}</div><div class="section-title">${category.name}</div></div>`;
-            const tasksContainer = document.createElement('div');
-            if (categoryTasks.length === 0) {
-                tasksContainer.innerHTML = '<div class="task-item" style="opacity: 0.6; font-style: italic;">No tasks today!</div>';
-            } else {
-                categoryTasks.forEach(task => {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.className = 'task-item';
-                    taskDiv.style.borderLeftColor = category.color;
-                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn" onclick="completeTask('${categoryId}', ${task.id})">Done</button></div>`;
-                    tasksContainer.appendChild(taskDiv);
-                });
-            }
-            section.appendChild(tasksContainer);
-            content.appendChild(section);
-        }
-    }
-
-    function renderLimitsSection() {
-        const container = document.getElementById('limitsSection');
-        let html = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits</div>';
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        for (const [categoryId, category] of Object.entries(categories)) {
-            html += `<div class="form-group"><label class="form-label">${category.name}</label>`;
-            for (let i = 0; i < days.length; i++) {
-                const dayKey = dayKeys[i];
-                const currentValue = rules[categoryId][dayKey];
-                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
-                    <div style="width: 80px; font-size: 13px;">${days[i]}</div>
-                    <select class="form-input" id="${categoryId}${dayKey}" onchange="updateLimitValue('${categoryId}', '${dayKey}', this.value)" style="padding: 8px;">
-                        <option value="-1" ${currentValue === -1 ? 'selected' : ''}>Unlimited</option>
-                        <option value="0" ${currentValue === 0 ? 'selected' : ''}>0</option>
-                        <option value="1" ${currentValue === 1 ? 'selected' : ''}>1</option>
-                        <option value="2" ${currentValue === 2 ? 'selected' : ''}>2</option>
-                        <option value="3" ${currentValue === 3 ? 'selected' : ''}>3</option>
-                        <option value="4" ${currentValue === 4 ? 'selected' : ''}>4</option>
-                        <option value="5" ${currentValue === 5 ? 'selected' : ''}>5</option>
-                    </select>
-                </div>`;
-            }
-            html += '</div>';
-        }
-        container.innerHTML = html;
-    }
-
-    function updateLimitValue(categoryId, dayKey, value) {
-        rules[categoryId][dayKey] = parseInt(value);
-        saveDataToSupabase();
-    }
-
-    function renderTaskList() {
-        const container = document.getElementById('taskList');
-        container.innerHTML = '';
-        for (const [category, categoryTasks] of Object.entries(tasks)) {
-            categoryTasks.forEach(task => {
-                const div = document.createElement('div');
-                div.className = 'task-list-item';
-                div.innerHTML = `<span>${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
-                container.appendChild(div);
-            });
-        }
-    }
-
-    function addTask() {
-        const text = document.getElementById('newTaskInput').value.trim();
-        const category = document.getElementById('taskCategory').value;
-        const type = document.getElementById('taskType').value;
-        if (text) {
-            tasks[category].push({ id: Date.now(), text, type });
-            document.getElementById('newTaskInput').value = '';
-            renderTaskList();
-            saveDataToSupabase();
-        }
-    }
-
-    function deleteTask(category, taskId) {
-        tasks[category] = tasks[category].filter(task => task.id !== taskId);
-        renderTaskList();
-        renderDailyView();
-        saveDataToSupabase();
-    }
-
-    function completeTask(category, taskId) {
-        event.target.textContent = '✓';
-        event.target.style.background = '#28a745';
-        setTimeout(() => {
-            renderDailyView();
-        }, 1000);
-    }
-
-    function showView(viewName) {
-        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if (viewName === 'daily') {
-            document.getElementById('dailyView').style.display = 'block';
-            event.target.classList.add('active');
-            renderDailyView();
-        } else if (viewName === 'setup') {
-            document.getElementById('setupView').style.display = 'block';
-            event.target.classList.add('active');
-            updateCategoryDropdown();
-            renderTaskList();
-            renderLimitsSection();
-            renderCategoryList();
-        }
-    }
-
-    document.getElementById('currentDate').textContent = getCurrentDate();
-    updateCategoryDropdown();
-    renderDailyView();
-    renderCategoryList();
-    document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+    // Initialize summary
+    updateSummary();
 </script>
 ```
 
