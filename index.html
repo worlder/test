@@ -184,6 +184,8 @@
 
     let currentUser = null;
     let currentEditingTask = null;
+    let categoryToDelete = null;
+    let tasksToReassign = [];
 
     let categories = {
         comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
@@ -402,7 +404,99 @@
         }
     }
 
-    let categoryToDelete = null;
+    function editTask(category, taskId) {
+        const task = tasks[category].find(t => t.id === taskId);
+        if (!task) return;
+        
+        currentEditingTask = { category, taskId, task };
+        
+        document.getElementById('editTaskText').value = task.text;
+        document.getElementById('editTaskFrequency').value = task.frequencyData?.frequency || 'weekly';
+        
+        if (task.frequencyData) {
+            const data = task.frequencyData;
+            document.getElementById('editFrequencyInterval').value = data.interval || 1;
+            document.getElementById('editFrequencyUnit').value = data.unit || 'weeks';
+            document.getElementById('editSchedulingType').value = data.scheduling || 'fixed';
+            
+            if (data.daysOfWeek) {
+                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                    const checkbox = document.getElementById(`edit_day_${day}`);
+                    if (checkbox) checkbox.checked = data.daysOfWeek.includes(day);
+                });
+            }
+        }
+        
+        updateEditFrequencyOptions();
+        document.getElementById('taskEditor').style.display = 'block';
+    }
+
+    function closeTaskEditor() {
+        document.getElementById('taskEditor').style.display = 'none';
+        currentEditingTask = null;
+    }
+
+    function updateEditFrequencyOptions() {
+        const frequency = document.getElementById('editTaskFrequency').value;
+        const details = document.getElementById('editFrequencyDetails');
+        const weeklyOptions = document.getElementById('editWeeklyOptions');
+        
+        if (frequency === 'never') {
+            details.style.display = 'none';
+        } else {
+            details.style.display = 'block';
+            
+            const unitSelect = document.getElementById('editFrequencyUnit');
+            if (frequency === 'daily') unitSelect.value = 'days';
+            else if (frequency === 'weekly') unitSelect.value = 'weeks';
+            else if (frequency === 'monthly') unitSelect.value = 'months';
+            else if (frequency === 'yearly') unitSelect.value = 'years';
+            
+            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
+        }
+    }
+
+    function saveTaskEdit() {
+        if (!currentEditingTask) return;
+        
+        const { category, taskId } = currentEditingTask;
+        const task = tasks[category].find(t => t.id === taskId);
+        if (!task) return;
+        
+        task.text = document.getElementById('editTaskText').value.trim();
+        const frequency = document.getElementById('editTaskFrequency').value;
+        
+        const frequencyData = {
+            frequency: frequency,
+            interval: parseInt(document.getElementById('editFrequencyInterval').value) || 1,
+            unit: document.getElementById('editFrequencyUnit').value,
+            scheduling: document.getElementById('editSchedulingType').value
+        };
+        
+        if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
+            const selectedDays = [];
+            ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                const checkbox = document.getElementById(`edit_day_${day}`);
+                if (checkbox && checkbox.checked) selectedDays.push(day);
+            });
+            frequencyData.daysOfWeek = selectedDays;
+        }
+        
+        task.frequencyData = frequencyData;
+        
+        if (frequency === 'never') {
+            task.type = 'never';
+        } else if (frequencyData.interval === 1) {
+            task.type = frequency;
+        } else {
+            task.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
+        }
+        
+        closeTaskEditor();
+        renderTaskList();
+        renderDailyView();
+        saveDataToSupabase();
+    }
     let tasksToReassign = [];
 
     function deleteCategory(categoryId) {
