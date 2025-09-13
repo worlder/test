@@ -55,19 +55,7 @@
                     <input type="email" class="form-input" id="loginEmail" placeholder="Email">
                     <input type="password" class="form-input" id="loginPassword" placeholder="Password">
                     <button class="add-btn" onclick="signIn()">Sign In</button>
-                    <!-- Category Deletion Modal -->
-            <div id="categoryDeleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 15px; padding: 20px; width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <button onclick="closeCategoryDeleteModal()" style="background: none; border: none; color: #007bff; font-size: 16px;">Cancel</button>
-                        <h3 style="margin: 0;">Delete Category</h3>
-                        <button onclick="confirmCategoryDelete()" style="background: none; border: none; color: #dc3545; font-size: 16px; font-weight: 600;">Delete</button>
-                    </div>
-                    
-                    <div id="categoryDeleteContent"></div>
                 </div>
-            </div>
-        </div>
                 <div class="auth-toggle" onclick="showSignUp()">Need an account? Sign up</div>
             </div>
             
@@ -103,55 +91,21 @@
                 <label class="form-label">Add New Task</label>
                 <input type="text" class="form-input" id="newTaskInput" placeholder="Enter task description">
                 <select class="form-input" id="taskCategory" style="margin-top: 8px;"></select>
-                
-                <div style="margin-top: 8px;">
-                    <label class="form-label">Frequency</label>
-                    <select class="form-input" id="newTaskFrequency" onchange="updateNewTaskFrequencyOptions()">
-                        <option value="never">Never (One-time)</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-
-                <div id="newTaskFrequencyDetails" style="display: none; margin-top: 10px;">
-                    <div class="form-group">
-                        <label class="form-label">Every</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="number" class="form-input" id="newTaskInterval" min="1" max="100" value="1" style="width: 80px;">
-                            <select class="form-input" id="newTaskUnit">
-                                <option value="days">Days</option>
-                                <option value="weeks">Weeks</option>
-                                <option value="months">Months</option>
-                                <option value="years">Years</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="newTaskWeeklyOptions" style="display: none;">
-                        <label class="form-label">Days of Week</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 15px;">
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_sunday"> Sunday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_monday"> Monday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_tuesday"> Tuesday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_wednesday"> Wednesday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_thursday"> Thursday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_friday"> Friday</label>
-                            <label style="display: flex; align-items: center; gap: 5px; font-size: 14px;"><input type="checkbox" id="new_day_saturday"> Saturday</label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Scheduling</label>
-                        <select class="form-input" id="newTaskScheduling">
-                            <option value="fixed">On Calendar Schedule</option>
-                            <option value="completion">From Last Completion</option>
-                        </select>
-                    </div>
-                </div>
-
+                <select class="form-input" id="taskType" style="margin-top: 8px;">
+                    <option value="never">Never</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekdays">Weekdays</option>
+                    <option value="weekends">Weekends</option>
+                    <option value="monday">Mondays only</option>
+                    <option value="tuesday">Tuesdays only</option>
+                    <option value="wednesday">Wednesdays only</option>
+                    <option value="thursday">Thursdays only</option>
+                    <option value="friday">Fridays only</option>
+                    <option value="saturday">Saturdays only</option>
+                    <option value="sunday">Sundays only</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
                 <button class="add-btn" onclick="addTask()">Add Task</button>
             </div>
 
@@ -183,9 +137,6 @@
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUser = null;
-    let currentEditingTask = null;
-    let categoryToDelete = null;
-    let tasksToReassign = [];
 
     let categories = {
         comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
@@ -214,17 +165,25 @@
             alert('Please fill in all fields with password 6+ characters');
             return;
         }
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) alert('Error: ' + error.message);
-        else alert('Check your email for verification link!');
+        try {
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) alert('Error: ' + error.message);
+            else alert('Check your email for verification link!');
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
     }
 
     async function signIn() {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         if (!email || !password) return alert('Please fill in all fields');
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) alert('Error: ' + error.message);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) alert('Error: ' + error.message);
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
     }
 
     async function signOut() {
@@ -244,26 +203,34 @@
     async function saveDataToSupabase() {
         if (!currentUser) return;
         const userData = { user_id: currentUser.id, categories, tasks, rules, rotation_index: rotationIndex, updated_at: new Date().toISOString() };
-        const { data: updateData, error: updateError } = await supabase.from('user_data').update(userData).eq('user_id', currentUser.id);
-        if (updateError && updateError.code === 'PGRST116') {
-            const { data: insertData, error: insertError } = await supabase.from('user_data').insert(userData);
-            if (insertError) console.error('Error inserting:', insertError);
-        } else if (updateError) console.error('Error updating:', updateError);
+        try {
+            const { data: updateData, error: updateError } = await supabase.from('user_data').update(userData).eq('user_id', currentUser.id);
+            if (updateError && updateError.code === 'PGRST116') {
+                const { data: insertData, error: insertError } = await supabase.from('user_data').insert(userData);
+                if (insertError) console.error('Error inserting:', insertError);
+            } else if (updateError) console.error('Error updating:', updateError);
+        } catch (err) {
+            console.error('Error saving:', err);
+        }
     }
 
     async function loadDataFromSupabase() {
         if (!currentUser) return;
-        const { data, error } = await supabase.from('user_data').select('*').eq('user_id', currentUser.id).single();
-        if (data) {
-            if (data.categories) categories = data.categories;
-            if (data.tasks) tasks = data.tasks;
-            if (data.rules) rules = data.rules;
-            if (data.rotation_index) rotationIndex = data.rotation_index;
-            updateCategoryDropdown();
-            renderDailyView();
-            renderLimitsSection();
-            renderTaskList();
-            renderCategoryList();
+        try {
+            const { data, error } = await supabase.from('user_data').select('*').eq('user_id', currentUser.id).single();
+            if (data) {
+                if (data.categories) categories = data.categories;
+                if (data.tasks) tasks = data.tasks;
+                if (data.rules) rules = data.rules;
+                if (data.rotation_index) rotationIndex = data.rotation_index;
+                updateCategoryDropdown();
+                renderDailyView();
+                renderLimitsSection();
+                renderTaskList();
+                renderCategoryList();
+            }
+        } catch (err) {
+            console.error('Error loading:', err);
         }
     }
 
@@ -293,33 +260,6 @@
         const dayOfWeek = today.getDay();
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const todayName = dayNames[dayOfWeek];
-        
-        if (task.frequencyData) {
-            const data = task.frequencyData;
-            if (data.frequency === 'never') return false;
-            
-            if (data.scheduling === 'completion' && task.lastCompleted) {
-                const lastCompleted = new Date(task.lastCompleted);
-                const daysSinceCompletion = Math.floor((today - lastCompleted) / (1000 * 60 * 60 * 24));
-                
-                let intervalDays = data.interval;
-                if (data.unit === 'weeks') intervalDays *= 7;
-                else if (data.unit === 'months') intervalDays *= 30;
-                else if (data.unit === 'years') intervalDays *= 365;
-                
-                return daysSinceCompletion >= intervalDays;
-            }
-            
-            if ((data.frequency === 'weekly' || data.unit === 'weeks') && data.daysOfWeek) {
-                return data.daysOfWeek.includes(todayName);
-            }
-            
-            if (data.frequency === 'daily' || data.unit === 'days') {
-                return true;
-            }
-            
-            return Math.random() > 0.7;
-        }
         
         switch (task.type) {
             case 'never': return false;
@@ -354,37 +294,6 @@
         return dailyTasks;
     }
 
-    function updateNewTaskFrequencyOptions() {
-        const frequency = document.getElementById('newTaskFrequency').value;
-        const details = document.getElementById('newTaskFrequencyDetails');
-        const weeklyOptions = document.getElementById('newTaskWeeklyOptions');
-        
-        if (frequency === 'never') {
-            details.style.display = 'none';
-        } else {
-            details.style.display = 'block';
-            
-            const unitSelect = document.getElementById('newTaskUnit');
-            const intervalInput = document.getElementById('newTaskInterval');
-            
-            if (frequency === 'daily') {
-                unitSelect.value = 'days';
-                intervalInput.value = 1;
-            } else if (frequency === 'weekly') {
-                unitSelect.value = 'weeks';
-                intervalInput.value = 1;
-            } else if (frequency === 'monthly') {
-                unitSelect.value = 'months';
-                intervalInput.value = 1;
-            } else if (frequency === 'yearly') {
-                unitSelect.value = 'years';
-                intervalInput.value = 1;
-            }
-            
-            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
-        }
-    }
-
     function addCategory() {
         const name = document.getElementById('newCategoryInput').value.trim();
         const icon = document.getElementById('newCategoryIcon').value.trim() || '📋';
@@ -404,186 +313,21 @@
         }
     }
 
-    function editTask(category, taskId) {
-        const task = tasks[category].find(t => t.id === taskId);
-        if (!task) return;
-        
-        currentEditingTask = { category, taskId, task };
-        
-        document.getElementById('editTaskText').value = task.text;
-        document.getElementById('editTaskFrequency').value = task.frequencyData?.frequency || 'weekly';
-        
-        if (task.frequencyData) {
-            const data = task.frequencyData;
-            document.getElementById('editFrequencyInterval').value = data.interval || 1;
-            document.getElementById('editFrequencyUnit').value = data.unit || 'weeks';
-            document.getElementById('editSchedulingType').value = data.scheduling || 'fixed';
-            
-            if (data.daysOfWeek) {
-                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                    const checkbox = document.getElementById(`edit_day_${day}`);
-                    if (checkbox) checkbox.checked = data.daysOfWeek.includes(day);
-                });
-            }
-        }
-        
-        updateEditFrequencyOptions();
-        document.getElementById('taskEditor').style.display = 'block';
-    }
-
-    function closeTaskEditor() {
-        document.getElementById('taskEditor').style.display = 'none';
-        currentEditingTask = null;
-    }
-
-    function updateEditFrequencyOptions() {
-        const frequency = document.getElementById('editTaskFrequency').value;
-        const details = document.getElementById('editFrequencyDetails');
-        const weeklyOptions = document.getElementById('editWeeklyOptions');
-        
-        if (frequency === 'never') {
-            details.style.display = 'none';
-        } else {
-            details.style.display = 'block';
-            
-            const unitSelect = document.getElementById('editFrequencyUnit');
-            if (frequency === 'daily') unitSelect.value = 'days';
-            else if (frequency === 'weekly') unitSelect.value = 'weeks';
-            else if (frequency === 'monthly') unitSelect.value = 'months';
-            else if (frequency === 'yearly') unitSelect.value = 'years';
-            
-            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
-        }
-    }
-
-    function saveTaskEdit() {
-        if (!currentEditingTask) return;
-        
-        const { category, taskId } = currentEditingTask;
-        const task = tasks[category].find(t => t.id === taskId);
-        if (!task) return;
-        
-        task.text = document.getElementById('editTaskText').value.trim();
-        const frequency = document.getElementById('editTaskFrequency').value;
-        
-        const frequencyData = {
-            frequency: frequency,
-            interval: parseInt(document.getElementById('editFrequencyInterval').value) || 1,
-            unit: document.getElementById('editFrequencyUnit').value,
-            scheduling: document.getElementById('editSchedulingType').value
-        };
-        
-        if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
-            const selectedDays = [];
-            ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                const checkbox = document.getElementById(`edit_day_${day}`);
-                if (checkbox && checkbox.checked) selectedDays.push(day);
-            });
-            frequencyData.daysOfWeek = selectedDays;
-        }
-        
-        task.frequencyData = frequencyData;
-        
-        if (frequency === 'never') {
-            task.type = 'never';
-        } else if (frequencyData.interval === 1) {
-            task.type = frequency;
-        } else {
-            task.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
-        }
-        
-        closeTaskEditor();
-        renderTaskList();
-        renderDailyView();
-        saveDataToSupabase();
-    }
-    let tasksToReassign = [];
-
     function deleteCategory(categoryId) {
         if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
-        
         const categoryName = categories[categoryId].name;
-        const categoryTasks = tasks[categoryId] || [];
-        
-        categoryToDelete = categoryId;
-        tasksToReassign = [...categoryTasks];
-        
-        // Build modal content
-        let content = `<div style="margin-bottom: 20px; text-align: center;">
-            <div style="font-size: 18px; margin-bottom: 10px;">Delete "${categoryName}"?</div>
-        `;
-        
-        if (categoryTasks.length === 0) {
-            content += `<div style="color: #666;">This category has no tasks. It will be deleted permanently.</div>`;
-        } else {
-            content += `<div style="color: #666; margin-bottom: 15px;">This category has ${categoryTasks.length} task(s). Choose where to move each task:</div>`;
-            
-            // List other categories as options
-            const otherCategories = Object.keys(categories).filter(id => id !== categoryId);
-            
-            categoryTasks.forEach((task, index) => {
-                content += `<div style="background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                    <div style="font-size: 14px; margin-bottom: 8px; font-weight: 500;">${task.text}</div>
-                    <select class="form-input" id="reassign_${task.id}" style="padding: 8px; font-size: 13px;">
-                        <option value="DELETE">Delete this task</option>`;
-                
-                otherCategories.forEach(catId => {
-                    content += `<option value="${catId}">${categories[catId].name}</option>`;
-                });
-                
-                content += `</select></div>`;
-            });
-        }
-        
-        content += '</div>';
-        
-        document.getElementById('categoryDeleteContent').innerHTML = content;
-        document.getElementById('categoryDeleteModal').style.display = 'block';
-    }
-
-    function closeCategoryDeleteModal() {
-        document.getElementById('categoryDeleteModal').style.display = 'none';
-        categoryToDelete = null;
-        tasksToReassign = [];
-    }
-
-    function confirmCategoryDelete() {
-        if (!categoryToDelete) return;
-        
-        const categoryTasks = tasks[categoryToDelete] || [];
-        
-        // Process task reassignments
-        categoryTasks.forEach(task => {
-            const reassignSelect = document.getElementById(`reassign_${task.id}`);
-            if (reassignSelect) {
-                const newCategory = reassignSelect.value;
-                if (newCategory !== 'DELETE') {
-                    // Move task to new category
-                    if (!tasks[newCategory]) tasks[newCategory] = [];
-                    tasks[newCategory].push(task);
-                }
-                // If DELETE is selected, task is simply not moved anywhere
-            }
-        });
-        
-        // Delete the category
-        delete categories[categoryToDelete];
-        delete tasks[categoryToDelete];
-        delete rules[categoryToDelete];
-        delete rotationIndex[categoryToDelete];
-        
-        // Refresh interface
+        const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
+        if (!confirm(`Delete "${categoryName}" category?${taskCount > 0 ? ` This will delete ${taskCount} tasks.` : ''}`)) return;
+        delete categories[categoryId];
+        delete tasks[categoryId];
+        delete rules[categoryId];
+        delete rotationIndex[categoryId];
         updateCategoryDropdown();
         renderDailyView();
         renderLimitsSection();
         renderCategoryList();
         renderTaskList();
-        
-        // Save changes
         saveDataToSupabase();
-        
-        // Close modal
-        closeCategoryDeleteModal();
     }
 
     function renderCategoryList() {
@@ -656,11 +400,6 @@
                         <option value="3" ${currentValue === 3 ? 'selected' : ''}>3</option>
                         <option value="4" ${currentValue === 4 ? 'selected' : ''}>4</option>
                         <option value="5" ${currentValue === 5 ? 'selected' : ''}>5</option>
-                        <option value="6" ${currentValue === 6 ? 'selected' : ''}>6</option>
-                        <option value="7" ${currentValue === 7 ? 'selected' : ''}>7</option>
-                        <option value="8" ${currentValue === 8 ? 'selected' : ''}>8</option>
-                        <option value="9" ${currentValue === 9 ? 'selected' : ''}>9</option>
-                        <option value="10" ${currentValue === 10 ? 'selected' : ''}>10</option>
                     </select>
                 </div>`;
             }
@@ -681,8 +420,7 @@
             categoryTasks.forEach(task => {
                 const div = document.createElement('div');
                 div.className = 'task-list-item';
-                div.style.cursor = 'pointer';
-                div.innerHTML = `<span onclick="editTask('${category}', ${task.id})">${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
+                div.innerHTML = `<span>${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
                 container.appendChild(div);
             });
         }
@@ -691,56 +429,13 @@
     function addTask() {
         const text = document.getElementById('newTaskInput').value.trim();
         const category = document.getElementById('taskCategory').value;
-        const frequency = document.getElementById('newTaskFrequency').value;
-        
-        if (!text) return;
-        
-        const newTask = {
-            id: Date.now(),
-            text: text,
-            type: frequency
-        };
-        
-        if (frequency !== 'never') {
-            const frequencyData = {
-                frequency: frequency,
-                interval: parseInt(document.getElementById('newTaskInterval').value) || 1,
-                unit: document.getElementById('newTaskUnit').value,
-                scheduling: document.getElementById('newTaskScheduling').value
-            };
-            
-            if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
-                const selectedDays = [];
-                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                    const checkbox = document.getElementById(`new_day_${day}`);
-                    if (checkbox && checkbox.checked) selectedDays.push(day);
-                });
-                frequencyData.daysOfWeek = selectedDays.length > 0 ? selectedDays : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            }
-            
-            newTask.frequencyData = frequencyData;
-            if (frequencyData.interval !== 1) {
-                newTask.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
-            }
+        const type = document.getElementById('taskType').value;
+        if (text) {
+            tasks[category].push({ id: Date.now(), text, type });
+            document.getElementById('newTaskInput').value = '';
+            renderTaskList();
+            saveDataToSupabase();
         }
-        
-        tasks[category].push(newTask);
-        
-        document.getElementById('newTaskInput').value = '';
-        document.getElementById('newTaskFrequency').value = 'weekly';
-        document.getElementById('newTaskInterval').value = 1;
-        document.getElementById('newTaskUnit').value = 'weeks';
-        document.getElementById('newTaskScheduling').value = 'fixed';
-        
-        ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-            const checkbox = document.getElementById(`new_day_${day}`);
-            if (checkbox) checkbox.checked = false;
-        });
-        
-        updateNewTaskFrequencyOptions();
-        renderTaskList();
-        renderDailyView();
-        saveDataToSupabase();
     }
 
     function deleteTask(category, taskId) {
@@ -751,12 +446,6 @@
     }
 
     function completeTask(category, taskId) {
-        const task = tasks[category].find(t => t.id === taskId);
-        if (task) {
-            task.lastCompleted = new Date().toISOString();
-            saveDataToSupabase();
-        }
-        
         event.target.textContent = '✓';
         event.target.style.background = '#28a745';
         setTimeout(() => {
