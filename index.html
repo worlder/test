@@ -54,7 +54,7 @@
     }
 
     .modal-overlay.show {
-        display: flex;
+        display: flex !important;
     }
 
     .modal {
@@ -1051,7 +1051,17 @@
             const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
             const div = document.createElement('div');
             div.className = 'task-list-item';
-            div.innerHTML = `<span>${category.icon} ${category.name} (${taskCount} tasks)</span><button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>`;
+            
+            const span = document.createElement('span');
+            span.textContent = `${category.icon} ${category.name} (${taskCount} tasks)`;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', () => deleteCategory(categoryId));
+            
+            div.appendChild(span);
+            div.appendChild(deleteBtn);
             container.appendChild(div);
         }
     }
@@ -1239,11 +1249,15 @@
         }
     }
 
+    // Initialize the app
     document.getElementById('currentDate').textContent = getCurrentDate();
     updateCategoryDropdown();
     renderDailyView();
     renderCategoryList();
     document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+    
+    // Make sure modal is initially hidden
+    document.getElementById('categoryDeletionModal').classList.remove('show');
 </script>
 ```
 
