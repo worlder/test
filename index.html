@@ -829,11 +829,15 @@
         }
     }
 
+    // Initialize the app
     document.getElementById('currentDate').textContent = getCurrentDate();
     updateCategoryDropdown();
     renderDailyView();
     renderCategoryList();
     document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+    
+    // Ensure modal is hidden on startup
+    document.getElementById('deleteModal').style.display = 'none';
 </script>
 ```
 
