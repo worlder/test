@@ -39,357 +39,86 @@
         .auth-toggle { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 14px; margin-top: 10px; }
 
 ```
-    /* Modal Styles */
-    .modal-overlay {
+    /* Simple Modal Styles */
+    #deleteModal {
+        display: none;
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none;
-        justify-content: center;
-        align-items: center;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
         z-index: 1000;
     }
-
-    .modal-overlay.show {
-        display: flex !important;
-    }
-
-    .modal {
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         background: white;
-        border-radius: 16px;
-        padding: 24px;
-        max-width: 500px;
+        padding: 20px;
+        border-radius: 12px;
         width: 90%;
+        max-width: 400px;
         max-height: 80vh;
         overflow-y: auto;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        animation: modalAppear 0.3s ease-out;
     }
-
-    @keyframes modalAppear {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+    .modal-header { 
+        margin-bottom: 16px; 
+        border-bottom: 1px solid #eee; 
+        padding-bottom: 12px;
     }
-
-    .modal-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .warning-icon {
-        width: 44px;
-        height: 44px;
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 16px;
-        font-size: 24px;
-        color: white;
-    }
-
-    .modal-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1a1a1a;
-        margin: 0;
-    }
-
-    .modal-subtitle {
-        font-size: 14px;
-        color: #6b7280;
-        margin-top: 4px;
-    }
-
-    .modal-body {
-        margin-bottom: 24px;
-    }
-
-    .instruction-text {
-        font-size: 16px;
-        color: #374151;
-        line-height: 1.5;
-        margin-bottom: 20px;
-        background: #f8fafc;
-        padding: 16px;
-        border-radius: 12px;
-        border-left: 4px solid #3b82f6;
-    }
-
-    .tasks-container {
-        margin-bottom: 24px;
-    }
-
-    .tasks-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-    }
-
-    .tasks-count {
-        background: #ddd6fe;
-        color: #7c3aed;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 8px;
-        border-radius: 12px;
-        margin-left: 8px;
-    }
-
-    .modal-task-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        background: #fff;
-        transition: border-color 0.2s;
-    }
-
-    .modal-task-item:hover {
-        border-color: #d1d5db;
-    }
-
-    .modal-task-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .modal-task-name {
-        font-size: 15px;
-        font-weight: 500;
-        color: #1f2937;
+    .modal-title { 
+        font-size: 18px; 
+        font-weight: 600; 
         margin-bottom: 4px;
-        word-break: break-word;
     }
-
-    .modal-task-details {
-        font-size: 13px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .modal-subtitle { 
+        font-size: 14px; 
+        color: #666; 
     }
-
-    .modal-task-meta {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .category-select-container {
-        margin-left: 16px;
-        min-width: 140px;
-    }
-
-    .category-select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #d1d5db;
+    .task-assignment {
+        padding: 12px;
+        border: 1px solid #ddd;
         border-radius: 8px;
-        background: white;
-        font-size: 14px;
-        color: #374151;
-        cursor: pointer;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        margin-bottom: 10px;
     }
-
-    .category-select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .category-select.delete-option {
-        color: #dc2626;
-        border-color: #fca5a5;
-        background: #fef2f2;
-    }
-
-    .bulk-actions {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 24px;
-    }
-
-    .bulk-actions-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 12px;
-    }
-
-    .bulk-action-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .task-name {
+        font-weight: 500;
         margin-bottom: 8px;
     }
-
-    .bulk-action-row:last-child {
-        margin-bottom: 0;
+    .assignment-select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
     }
-
-    .bulk-select {
-        padding: 6px 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        background: white;
-        font-size: 13px;
-        min-width: 120px;
-    }
-
-    .bulk-btn {
-        padding: 6px 12px;
-        background: #3b82f6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .bulk-btn:hover {
-        background: #2563eb;
-    }
-
-    .summary-box {
-        background: #fef3c7;
-        border: 1px solid #f59e0b;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 24px;
-    }
-
-    .summary-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #92400e;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-    }
-
-    .summary-icon {
-        width: 16px;
-        height: 16px;
-        margin-right: 8px;
-    }
-
-    .summary-stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        font-size: 13px;
-        color: #78350f;
-    }
-
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
     .modal-actions {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         justify-content: flex-end;
+        margin-top: 20px;
         padding-top: 16px;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid #eee;
     }
-
-    .btn {
-        padding: 12px 20px;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
+    .modal-btn {
+        padding: 10px 16px;
         border: none;
-        transition: all 0.2s;
-        min-width: 100px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
     }
-
-    .btn-secondary {
-        background: #f3f4f6;
-        color: #374151;
+    .modal-btn-cancel {
+        background: #f5f5f5;
+        color: #333;
     }
-
-    .btn-secondary:hover {
-        background: #e5e7eb;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    .modal-btn-confirm {
+        background: #dc3545;
         color: white;
     }
-
-    .btn-primary:hover {
-        background: linear-gradient(135deg, #1d4ed8, #1e40af);
-        transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
-        background: #d1d5db;
-        color: #9ca3af;
+    .modal-btn:disabled {
+        opacity: 0.5;
         cursor: not-allowed;
-        transform: none;
-    }
-
-    @media (max-width: 480px) {
-        .modal {
-            margin: 20px;
-            width: auto;
-            max-height: 90vh;
-        }
-        
-        .modal-task-item {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 12px;
-        }
-        
-        .category-select-container {
-            margin-left: 0;
-            min-width: auto;
-        }
-        
-        .bulk-action-row {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .modal-actions {
-            flex-direction: column;
-        }
-        
-        .btn {
-            width: 100%;
-        }
-
-        .summary-stats {
-            grid-template-columns: 1fr;
-        }
     }
 </style>
 ```
@@ -520,76 +249,19 @@
     </div>
 </div>
 
-<!-- Task Reassignment Modal -->
-<div class="modal-overlay" id="categoryDeletionModal" style="display: none;">
-    <div class="modal">
+<!-- Simple Delete Modal -->
+<div id="deleteModal">
+    <div class="modal-content">
         <div class="modal-header">
-            <div class="warning-icon">📋</div>
-            <div>
-                <h2 class="modal-title" id="modalTitle">Reassign Tasks from Category</h2>
-                <div class="modal-subtitle">Choose where to move each task before deleting this category</div>
-            </div>
+            <div class="modal-title" id="deleteModalTitle">Delete Category</div>
+            <div class="modal-subtitle">Choose what to do with tasks in this category</div>
         </div>
-        
-        <div class="modal-body">
-            <div class="instruction-text">
-                Select a new category for each task below, or choose "Delete" to permanently remove individual tasks. The category will be deleted once you proceed.
-            </div>
-
-            <div class="bulk-actions">
-                <div class="bulk-actions-title">Quick Actions</div>
-                <div class="bulk-action-row">
-                    <span style="font-size: 13px; color: #6b7280;">Move all tasks to:</span>
-                    <select class="bulk-select" id="bulkCategory">
-                        <option value="">Select category...</option>
-                    </select>
-                    <button class="bulk-btn" onclick="applyBulkAction()">Apply to All</button>
-                </div>
-            </div>
-            
-            <div class="tasks-container">
-                <div class="tasks-title">
-                    Tasks to Reassign
-                    <span class="tasks-count" id="taskCount">0 tasks</span>
-                </div>
-                <div id="modalTaskList">
-                    <!-- Tasks will be populated here -->
-                </div>
-            </div>
-
-            <div class="summary-box">
-                <div class="summary-title">
-                    <svg class="summary-icon" fill="#92400e" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    Summary of Changes
-                </div>
-                <div class="summary-stats">
-                    <div class="stat-item">
-                        <span>Moving to categories:</span>
-                        <strong id="movingCount">0</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Tasks to delete:</span>
-                        <strong id="deletingCount">0</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Unassigned tasks:</span>
-                        <strong id="unassignedCount">0</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Ready to proceed:</span>
-                        <strong id="readyStatus">No</strong>
-                    </div>
-                </div>
-            </div>
+        <div id="deleteModalBody">
+            <!-- Task assignments will be populated here -->
         </div>
-        
         <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-primary" id="proceedBtn" disabled onclick="proceedWithDeletion()">
-                Reassign & Delete Category
-            </button>
+            <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmCategoryDelete()">Delete Category</button>
         </div>
     </div>
 </div>
@@ -602,7 +274,7 @@
 
     let currentUser = null;
     let currentEditingTask = null;
-    let currentDeletingCategory = null;
+    let deletingCategoryId = null;
     let taskAssignments = {};
 
     let categories = {
@@ -699,6 +371,8 @@
             document.getElementById('userInfo').style.display = 'none';
             document.getElementById('logoutNavBtn').style.display = 'none';
             showSignIn();
+            // Don't show tasks when not signed in
+            document.getElementById('dailyView').innerHTML = '<div class="task-section"><div style="text-align: center; color: #666; font-style: italic; padding: 20px;">Please sign in to view your tasks</div></div>';
         }
     });
 
@@ -751,6 +425,8 @@
     }
 
     function generateDailyTasks() {
+        if (!currentUser) return {};
+        
         const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
         const dailyTasks = {};
         
@@ -823,443 +499,90 @@
     }
 
     function deleteCategory(categoryId) {
-        console.log('deleteCategory called with:', categoryId); // Debug log
-        
         if (Object.keys(categories).length <= 1) {
             alert('You must have at least one category');
             return;
         }
-        
+
         const categoryTasks = tasks[categoryId] || [];
-        console.log('Category tasks:', categoryTasks); // Debug log
         
         if (categoryTasks.length === 0) {
-            // No tasks, just delete the category directly
+            // No tasks, simple delete
             const categoryName = categories[categoryId].name;
-            if (!confirm(`Delete "${categoryName}" category? It has no tasks.`)) return;
-            
-            delete categories[categoryId];
-            delete tasks[categoryId];
-            delete rules[categoryId];
-            delete rotationIndex[categoryId];
-            updateCategoryDropdown();
-            renderDailyView();
-            renderLimitsSection();
-            renderCategoryList();
-            renderTaskList();
-            saveDataToSupabase();
+            if (confirm(`Delete "${categoryName}" category? It has no tasks.`)) {
+                delete categories[categoryId];
+                delete tasks[categoryId];
+                delete rules[categoryId];
+                delete rotationIndex[categoryId];
+                updateCategoryDropdown();
+                renderDailyView();
+                renderLimitsSection();
+                renderCategoryList();
+                renderTaskList();
+                saveDataToSupabase();
+            }
         } else {
-            // Has tasks, show the reassignment modal
-            console.log('Showing modal for category:', categoryId); // Debug log
-            showCategoryDeletionModal(categoryId);
+            // Has tasks, show modal
+            showDeleteModal(categoryId);
         }
     }
 
-    function showCategoryDeletionModal(categoryId) {
-        try {
-            currentDeletingCategory = categoryId;
-            taskAssignments = {};
-            
-            const categoryName = categories[categoryId].name;
-            const categoryTasks = tasks[categoryId] || [];
-            
-            // Update modal title
-            document.getElementById('modalTitle').textContent = `Reassign Tasks from "${categoryName}"`;
-            document.getElementById('taskCount').textContent = `${categoryTasks.length} tasks`;
-            
-            // Populate bulk dropdown with other categories
-            const bulkSelect = document.getElementById('bulkCategory');
-            bulkSelect.innerHTML = '<option value="">Select category...</option>';
-            
-            for (const [catId, category] of Object.entries(categories)) {
-                if (catId !== categoryId) {
-                    const option = document.createElement('option');
-                    option.value = catId;
-                    option.textContent = category.name;
-                    bulkSelect.appendChild(option);
-                }
-            }
-            
-            // Populate task list
-            const taskList = document.getElementById('modalTaskList');
-            taskList.innerHTML = '';
+    function showDeleteModal(categoryId) {
+        deletingCategoryId = categoryId;
+        taskAssignments = {};
+        
+        const categoryName = categories[categoryId].name;
+        const categoryTasks = tasks[categoryId] || [];
+        
+        document.getElementById('deleteModalTitle').textContent = `Delete "${categoryName}" Category`;
+        
+        const modalBody = document.getElementById('deleteModalBody');
+        modalBody.innerHTML = '';
+        
+        if (categoryTasks.length > 0) {
+            const instructions = document.createElement('div');
+            instructions.innerHTML = `<p style="margin-bottom: 16px; color: #666; font-size: 14px;">Choose what to do with each task:</p>`;
+            modalBody.appendChild(instructions);
             
             categoryTasks.forEach(task => {
                 const taskDiv = document.createElement('div');
-                taskDiv.className = 'modal-task-item';
-                
-                const taskInfo = document.createElement('div');
-                taskInfo.className = 'modal-task-info';
+                taskDiv.className = 'task-assignment';
                 
                 const taskName = document.createElement('div');
-                taskName.className = 'modal-task-name';
+                taskName.className = 'task-name';
                 taskName.textContent = task.text;
                 
-                const taskDetails = document.createElement('div');
-                taskDetails.className = 'modal-task-details';
-                taskDetails.innerHTML = `
-                    <div class="modal-task-meta">
-                        <span>Type: ${task.type}</span>
-                    </div>
-                `;
-                
-                taskInfo.appendChild(taskName);
-                taskInfo.appendChild(taskDetails);
-                
-                const selectContainer = document.createElement('div');
-                selectContainer.className = 'category-select-container';
-                
                 const select = document.createElement('select');
-                select.className = 'category-select';
-                select.setAttribute('data-task', task.id);
+                select.className = 'assignment-select';
+                select.setAttribute('data-task-id', task.id);
                 
-                select.innerHTML = '<option value="">Choose destination...</option>';
+                select.innerHTML = '<option value="">Choose action...</option>';
                 
-                for (const [catId, category] of Object.entries(categories)) {
+                // Add other categories as options
+                Object.entries(categories).forEach(([catId, category]) => {
                     if (catId !== categoryId) {
-                        const option = document.createElement('option');
-                        option.value = catId;
-                        option.textContent = category.name;
-                        select.appendChild(option);
+                        select.innerHTML += `<option value="${catId}">Move to ${category.name}</option>`;
                     }
-                }
-                
-                const deleteOption = document.createElement('option');
-                deleteOption.value = 'delete';
-                deleteOption.textContent = 'Delete this task';
-                select.appendChild(deleteOption);
-                
-                select.addEventListener('change', updateSummary);
-                
-                selectContainer.appendChild(select);
-                taskDiv.appendChild(taskInfo);
-                taskDiv.appendChild(selectContainer);
-                taskList.appendChild(taskDiv);
-            });
-            
-            // Show modal with a slight delay to ensure DOM is ready
-            setTimeout(() => {
-                const modal = document.getElementById('categoryDeletionModal');
-                if (modal) {
-                    modal.classList.add('show');
-                    updateSummary();
-                } else {
-                    alert('Modal not found - there may be a technical issue');
-                }
-            }, 100);
-            
-        } catch (error) {
-            alert('Error showing modal: ' + error.message);
-        }
-    }
-
-    function updateSummary() {
-        const selects = document.querySelectorAll('.category-select');
-        let moving = 0;
-        let deleting = 0;
-        let unassigned = 0;
-
-        selects.forEach(select => {
-            const value = select.value;
-            const taskId = select.dataset.task;
-            
-            if (value === '') {
-                unassigned++;
-            } else if (value === 'delete') {
-                deleting++;
-                taskAssignments[taskId] = 'delete';
-            } else {
-                moving++;
-                taskAssignments[taskId] = value;
-            }
-
-            // Update select styling for delete options
-            if (value === 'delete') {
-                select.classList.add('delete-option');
-            } else {
-                select.classList.remove('delete-option');
-            }
-        });
-
-        document.getElementById('movingCount').textContent = moving;
-        document.getElementById('deletingCount').textContent = deleting;
-        document.getElementById('unassignedCount').textContent = unassigned;
-        
-        const allAssigned = unassigned === 0;
-        document.getElementById('readyStatus').textContent = allAssigned ? 'Yes' : 'No';
-        document.getElementById('proceedBtn').disabled = !allAssigned;
-    }
-
-    function applyBulkAction() {
-        const bulkCategory = document.getElementById('bulkCategory').value;
-        if (!bulkCategory) return;
-
-        const selects = document.querySelectorAll('.category-select');
-        selects.forEach(select => {
-            select.value = bulkCategory;
-        });
-        
-        updateSummary();
-    }
-
-    function closeModal() {
-        document.getElementById('categoryDeletionModal').classList.remove('show');
-        currentDeletingCategory = null;
-        taskAssignments = {};
-    }
-
-    function proceedWithDeletion() {
-        if (!currentDeletingCategory) return;
-
-        const categoryTasks = tasks[currentDeletingCategory] || [];
-        
-        // Process task assignments
-        categoryTasks.forEach(task => {
-            const assignment = taskAssignments[task.id];
-            if (assignment === 'delete') {
-                // Task will be deleted, do nothing
-            } else if (assignment && assignment !== currentDeletingCategory) {
-                // Move task to new category
-                if (!tasks[assignment]) tasks[assignment] = [];
-                tasks[assignment].push(task);
-            }
-        });
-
-        // Delete the category
-        const categoryName = categories[currentDeletingCategory].name;
-        delete categories[currentDeletingCategory];
-        delete tasks[currentDeletingCategory];
-        delete rules[currentDeletingCategory];
-        delete rotationIndex[currentDeletingCategory];
-
-        // Update UI
-        updateCategoryDropdown();
-        renderDailyView();
-        renderLimitsSection();
-        renderCategoryList();
-        renderTaskList();
-        saveDataToSupabase();
-
-        // Close modal
-        closeModal();
-    }
-
-    function renderCategoryList() {
-        const container = document.getElementById('categoryList');
-        container.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
-            const div = document.createElement('div');
-            div.className = 'task-list-item';
-            
-            const span = document.createElement('span');
-            span.textContent = `${category.icon} ${category.name} (${taskCount} tasks)`;
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = 'Delete';
-            deleteBtn.addEventListener('click', () => deleteCategory(categoryId));
-            
-            div.appendChild(span);
-            div.appendChild(deleteBtn);
-            container.appendChild(div);
-        }
-    }
-
-    function updateCategoryDropdown() {
-        const dropdown = document.getElementById('taskCategory');
-        dropdown.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const option = document.createElement('option');
-            option.value = categoryId;
-            option.textContent = category.name;
-            dropdown.appendChild(option);
-        }
-    }
-
-    function renderDailyView() {
-        const content = document.getElementById('dailyView');
-        const dailyTasks = generateDailyTasks();
-        content.innerHTML = '';
-        for (const [categoryId, category] of Object.entries(categories)) {
-            const categoryTasks = dailyTasks[categoryId] || [];
-            const section = document.createElement('div');
-            section.className = 'task-section';
-            section.innerHTML = `<div class="section-header"><div class="section-icon" style="background: ${category.color}">${category.icon}</div><div class="section-title">${category.name}</div></div>`;
-            const tasksContainer = document.createElement('div');
-            if (categoryTasks.length === 0) {
-                tasksContainer.innerHTML = '<div class="task-item" style="opacity: 0.6; font-style: italic;">No tasks today!</div>';
-            } else {
-                categoryTasks.forEach(task => {
-                    const taskDiv = document.createElement('div');
-                    taskDiv.className = 'task-item';
-                    taskDiv.style.borderLeftColor = category.color;
-                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn" onclick="completeTask('${categoryId}', ${task.id})">Done</button></div>`;
-                    tasksContainer.appendChild(taskDiv);
                 });
-            }
-            section.appendChild(tasksContainer);
-            content.appendChild(section);
-        }
-    }
-
-    function renderLimitsSection() {
-        const container = document.getElementById('limitsSection');
-        let html = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits</div>';
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-        
-        for (const [categoryId, category] of Object.entries(categories)) {
-            html += `<div class="form-group"><label class="form-label">${category.name}</label>`;
-            for (let i = 0; i < days.length; i++) {
-                const dayKey = dayKeys[i];
-                const currentValue = rules[categoryId][dayKey];
-                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
-                    <div style="width: 80px; font-size: 13px;">${days[i]}</div>
-                    <select class="form-input" id="${categoryId}${dayKey}" onchange="updateLimitValue('${categoryId}', '${dayKey}', this.value)" style="padding: 8px;">
-                        <option value="-1" ${currentValue === -1 ? 'selected' : ''}>Unlimited</option>
-                        <option value="0" ${currentValue === 0 ? 'selected' : ''}>0</option>
-                        <option value="1" ${currentValue === 1 ? 'selected' : ''}>1</option>
-                        <option value="2" ${currentValue === 2 ? 'selected' : ''}>2</option>
-                        <option value="3" ${currentValue === 3 ? 'selected' : ''}>3</option>
-                        <option value="4" ${currentValue === 4 ? 'selected' : ''}>4</option>
-                        <option value="5" ${currentValue === 5 ? 'selected' : ''}>5</option>
-                        <option value="6" ${currentValue === 6 ? 'selected' : ''}>6</option>
-                        <option value="7" ${currentValue === 7 ? 'selected' : ''}>7</option>
-                        <option value="8" ${currentValue === 8 ? 'selected' : ''}>8</option>
-                        <option value="9" ${currentValue === 9 ? 'selected' : ''}>9</option>
-                        <option value="10" ${currentValue === 10 ? 'selected' : ''}>10</option>
-                    </select>
-                </div>`;
-            }
-            html += '</div>';
-        }
-        container.innerHTML = html;
-    }
-
-    function updateLimitValue(categoryId, dayKey, value) {
-        rules[categoryId][dayKey] = parseInt(value);
-        saveDataToSupabase();
-    }
-
-    function renderTaskList() {
-        const container = document.getElementById('taskList');
-        container.innerHTML = '';
-        for (const [category, categoryTasks] of Object.entries(tasks)) {
-            categoryTasks.forEach(task => {
-                const div = document.createElement('div');
-                div.className = 'task-list-item';
-                div.style.cursor = 'pointer';
-                div.innerHTML = `<span onclick="editTask('${category}', ${task.id})">${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
-                container.appendChild(div);
+                
+                select.innerHTML += '<option value="delete">Delete this task</option>';
+                
+                select.onchange = function() {
+                    taskAssignments[task.id] = this.value;
+                    checkAllAssigned();
+                };
+                
+                taskDiv.appendChild(taskName);
+                taskDiv.appendChild(select);
+                modalBody.appendChild(taskDiv);
             });
         }
+        
+        document.getElementById('deleteModal').style.display = 'block';
+        checkAllAssigned();
     }
 
-    function addTask() {
-        const text = document.getElementById('newTaskInput').value.trim();
-        const category = document.getElementById('taskCategory').value;
-        const frequency = document.getElementById('newTaskFrequency').value;
-        
-        if (!text) return;
-        
-        const newTask = {
-            id: Date.now(),
-            text: text,
-            type: frequency
-        };
-        
-        if (frequency !== 'never') {
-            const frequencyData = {
-                frequency: frequency,
-                interval: parseInt(document.getElementById('newTaskInterval').value) || 1,
-                unit: document.getElementById('newTaskUnit').value,
-                scheduling: document.getElementById('newTaskScheduling').value
-            };
-            
-            if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
-                const selectedDays = [];
-                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                    const checkbox = document.getElementById(`new_day_${day}`);
-                    if (checkbox && checkbox.checked) selectedDays.push(day);
-                });
-                frequencyData.daysOfWeek = selectedDays.length > 0 ? selectedDays : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            }
-            
-            newTask.frequencyData = frequencyData;
-            if (frequencyData.interval !== 1) {
-                newTask.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
-            }
-        }
-        
-        tasks[category].push(newTask);
-        
-        document.getElementById('newTaskInput').value = '';
-        document.getElementById('newTaskFrequency').value = 'weekly';
-        document.getElementById('newTaskInterval').value = 1;
-        document.getElementById('newTaskUnit').value = 'weeks';
-        document.getElementById('newTaskScheduling').value = 'fixed';
-        
-        ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-            const checkbox = document.getElementById(`new_day_${day}`);
-            if (checkbox) checkbox.checked = false;
-        });
-        
-        updateNewTaskFrequencyOptions();
-        renderTaskList();
-        renderDailyView();
-        saveDataToSupabase();
-    }
-
-    function deleteTask(category, taskId) {
-        tasks[category] = tasks[category].filter(task => task.id !== taskId);
-        renderTaskList();
-        renderDailyView();
-        saveDataToSupabase();
-    }
-
-    function completeTask(category, taskId) {
-        const task = tasks[category].find(t => t.id === taskId);
-        if (task) {
-            task.lastCompleted = new Date().toISOString();
-            saveDataToSupabase();
-        }
-        
-        event.target.textContent = '✓';
-        event.target.style.background = '#28a745';
-        setTimeout(() => {
-            renderDailyView();
-        }, 1000);
-    }
-
-    function showView(viewName) {
-        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if (viewName === 'daily') {
-            document.getElementById('dailyView').style.display = 'block';
-            event.target.classList.add('active');
-            renderDailyView();
-        } else if (viewName === 'setup') {
-            document.getElementById('setupView').style.display = 'block';
-            event.target.classList.add('active');
-            updateCategoryDropdown();
-            renderTaskList();
-            renderLimitsSection();
-            renderCategoryList();
-        }
-    }
-
-    // Initialize the app
-    document.getElementById('currentDate').textContent = getCurrentDate();
-    updateCategoryDropdown();
-    renderDailyView();
-    renderCategoryList();
-    document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
-    
-    // Make sure modal is initially hidden
-    document.getElementById('categoryDeletionModal').classList.remove('show');
-</script>
+    function checkAllAssigned() {
+        const categoryTasks = tasks[deletingCategoryId] || [];
+        const allAssigned = categoryTasks.every(task => taskAssignments[task.id] && taskAssignments[task.id] !== '');
 ```
-
-</body>
-</html>
