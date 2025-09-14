@@ -823,9 +823,16 @@
     }
 
     function deleteCategory(categoryId) {
-        if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
+        console.log('deleteCategory called with:', categoryId); // Debug log
+        
+        if (Object.keys(categories).length <= 1) {
+            alert('You must have at least one category');
+            return;
+        }
         
         const categoryTasks = tasks[categoryId] || [];
+        console.log('Category tasks:', categoryTasks); // Debug log
+        
         if (categoryTasks.length === 0) {
             // No tasks, just delete the category directly
             const categoryName = categories[categoryId].name;
@@ -843,94 +850,107 @@
             saveDataToSupabase();
         } else {
             // Has tasks, show the reassignment modal
+            console.log('Showing modal for category:', categoryId); // Debug log
             showCategoryDeletionModal(categoryId);
         }
     }
 
     function showCategoryDeletionModal(categoryId) {
-        currentDeletingCategory = categoryId;
-        taskAssignments = {};
-        
-        const categoryName = categories[categoryId].name;
-        const categoryTasks = tasks[categoryId] || [];
-        
-        // Update modal title
-        document.getElementById('modalTitle').textContent = `Reassign Tasks from "${categoryName}"`;
-        document.getElementById('taskCount').textContent = `${categoryTasks.length} tasks`;
-        
-        // Populate bulk dropdown with other categories
-        const bulkSelect = document.getElementById('bulkCategory');
-        bulkSelect.innerHTML = '<option value="">Select category...</option>';
-        
-        for (const [catId, category] of Object.entries(categories)) {
-            if (catId !== categoryId) {
-                const option = document.createElement('option');
-                option.value = catId;
-                option.textContent = category.name;
-                bulkSelect.appendChild(option);
-            }
-        }
-        
-        // Populate task list
-        const taskList = document.getElementById('modalTaskList');
-        taskList.innerHTML = '';
-        
-        categoryTasks.forEach(task => {
-            const taskDiv = document.createElement('div');
-            taskDiv.className = 'modal-task-item';
+        try {
+            currentDeletingCategory = categoryId;
+            taskAssignments = {};
             
-            const taskInfo = document.createElement('div');
-            taskInfo.className = 'modal-task-info';
+            const categoryName = categories[categoryId].name;
+            const categoryTasks = tasks[categoryId] || [];
             
-            const taskName = document.createElement('div');
-            taskName.className = 'modal-task-name';
-            taskName.textContent = task.text;
+            // Update modal title
+            document.getElementById('modalTitle').textContent = `Reassign Tasks from "${categoryName}"`;
+            document.getElementById('taskCount').textContent = `${categoryTasks.length} tasks`;
             
-            const taskDetails = document.createElement('div');
-            taskDetails.className = 'modal-task-details';
-            taskDetails.innerHTML = `
-                <div class="modal-task-meta">
-                    <span>📅 Type: ${task.type}</span>
-                </div>
-            `;
-            
-            taskInfo.appendChild(taskName);
-            taskInfo.appendChild(taskDetails);
-            
-            const selectContainer = document.createElement('div');
-            selectContainer.className = 'category-select-container';
-            
-            const select = document.createElement('select');
-            select.className = 'category-select';
-            select.setAttribute('data-task', task.id);
-            
-            select.innerHTML = '<option value="">Choose destination...</option>';
+            // Populate bulk dropdown with other categories
+            const bulkSelect = document.getElementById('bulkCategory');
+            bulkSelect.innerHTML = '<option value="">Select category...</option>';
             
             for (const [catId, category] of Object.entries(categories)) {
                 if (catId !== categoryId) {
                     const option = document.createElement('option');
                     option.value = catId;
                     option.textContent = category.name;
-                    select.appendChild(option);
+                    bulkSelect.appendChild(option);
                 }
             }
             
-            const deleteOption = document.createElement('option');
-            deleteOption.value = 'delete';
-            deleteOption.textContent = '🗑️ Delete this task';
-            select.appendChild(deleteOption);
+            // Populate task list
+            const taskList = document.getElementById('modalTaskList');
+            taskList.innerHTML = '';
             
-            select.addEventListener('change', updateSummary);
+            categoryTasks.forEach(task => {
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'modal-task-item';
+                
+                const taskInfo = document.createElement('div');
+                taskInfo.className = 'modal-task-info';
+                
+                const taskName = document.createElement('div');
+                taskName.className = 'modal-task-name';
+                taskName.textContent = task.text;
+                
+                const taskDetails = document.createElement('div');
+                taskDetails.className = 'modal-task-details';
+                taskDetails.innerHTML = `
+                    <div class="modal-task-meta">
+                        <span>Type: ${task.type}</span>
+                    </div>
+                `;
+                
+                taskInfo.appendChild(taskName);
+                taskInfo.appendChild(taskDetails);
+                
+                const selectContainer = document.createElement('div');
+                selectContainer.className = 'category-select-container';
+                
+                const select = document.createElement('select');
+                select.className = 'category-select';
+                select.setAttribute('data-task', task.id);
+                
+                select.innerHTML = '<option value="">Choose destination...</option>';
+                
+                for (const [catId, category] of Object.entries(categories)) {
+                    if (catId !== categoryId) {
+                        const option = document.createElement('option');
+                        option.value = catId;
+                        option.textContent = category.name;
+                        select.appendChild(option);
+                    }
+                }
+                
+                const deleteOption = document.createElement('option');
+                deleteOption.value = 'delete';
+                deleteOption.textContent = 'Delete this task';
+                select.appendChild(deleteOption);
+                
+                select.addEventListener('change', updateSummary);
+                
+                selectContainer.appendChild(select);
+                taskDiv.appendChild(taskInfo);
+                taskDiv.appendChild(selectContainer);
+                taskList.appendChild(taskDiv);
+            });
             
-            selectContainer.appendChild(select);
-            taskDiv.appendChild(taskInfo);
-            taskDiv.appendChild(selectContainer);
-            taskList.appendChild(taskDiv);
-        });
-        
-        // Show modal
-        document.getElementById('categoryDeletionModal').classList.add('show');
-        updateSummary();
+            // Show modal with a slight delay to ensure DOM is ready
+            setTimeout(() => {
+                const modal = document.getElementById('categoryDeletionModal');
+                if (modal) {
+                    modal.classList.add('show');
+                    updateSummary();
+                } else {
+                    alert('Modal not found - there may be a technical issue');
+                }
+            }, 100);
+            
+        } catch (error) {
+            alert('Error showing modal: ' + error.message);
+        }
     }
 
     function updateSummary() {
