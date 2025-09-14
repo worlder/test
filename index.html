@@ -585,4 +585,255 @@
     function checkAllAssigned() {
         const categoryTasks = tasks[deletingCategoryId] || [];
         const allAssigned = categoryTasks.every(task => taskAssignments[task.id] && taskAssignments[task.id] !== '');
+        document.getElementById('confirmDeleteBtn').disabled = !allAssigned;
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        deletingCategoryId = null;
+        taskAssignments = {};
+    }
+
+    function confirmCategoryDelete() {
+        if (!deletingCategoryId) return;
+        
+        const categoryTasks = tasks[deletingCategoryId] || [];
+        
+        // Process each task assignment
+        categoryTasks.forEach(task => {
+            const assignment = taskAssignments[task.id];
+            if (assignment && assignment !== 'delete') {
+                // Move task to another category
+                if (!tasks[assignment]) tasks[assignment] = [];
+                tasks[assignment].push(task);
+            }
+            // If assignment is 'delete' or empty, task will be deleted
+        });
+        
+        // Delete the category
+        delete categories[deletingCategoryId];
+        delete tasks[deletingCategoryId];
+        delete rules[deletingCategoryId];
+        delete rotationIndex[deletingCategoryId];
+        
+        // Update UI
+        updateCategoryDropdown();
+        renderDailyView();
+        renderLimitsSection();
+        renderCategoryList();
+        renderTaskList();
+        saveDataToSupabase();
+        
+        closeDeleteModal();
+    }
+
+    function renderCategoryList() {
+        const container = document.getElementById('categoryList');
+        container.innerHTML = '';
+        for (const [categoryId, category] of Object.entries(categories)) {
+            const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
+            const div = document.createElement('div');
+            div.className = 'task-list-item';
+            div.innerHTML = `<span>${category.icon} ${category.name} (${taskCount} tasks)</span><button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>`;
+            container.appendChild(div);
+        }
+    }
+
+    function updateCategoryDropdown() {
+        const dropdown = document.getElementById('taskCategory');
+        dropdown.innerHTML = '';
+        for (const [categoryId, category] of Object.entries(categories)) {
+            const option = document.createElement('option');
+            option.value = categoryId;
+            option.textContent = category.name;
+            dropdown.appendChild(option);
+        }
+    }
+
+    function renderDailyView() {
+        if (!currentUser) {
+            document.getElementById('dailyView').innerHTML = '<div class="task-section"><div style="text-align: center; color: #666; font-style: italic; padding: 20px;">Please sign in to view your tasks</div></div>';
+            return;
+        }
+        
+        const content = document.getElementById('dailyView');
+        const dailyTasks = generateDailyTasks();
+        content.innerHTML = '';
+        for (const [categoryId, category] of Object.entries(categories)) {
+            const categoryTasks = dailyTasks[categoryId] || [];
+            const section = document.createElement('div');
+            section.className = 'task-section';
+            section.innerHTML = `<div class="section-header"><div class="section-icon" style="background: ${category.color}">${category.icon}</div><div class="section-title">${category.name}</div></div>`;
+            const tasksContainer = document.createElement('div');
+            if (categoryTasks.length === 0) {
+                tasksContainer.innerHTML = '<div class="task-item" style="opacity: 0.6; font-style: italic;">No tasks today!</div>';
+            } else {
+                categoryTasks.forEach(task => {
+                    const taskDiv = document.createElement('div');
+                    taskDiv.className = 'task-item';
+                    taskDiv.style.borderLeftColor = category.color;
+                    taskDiv.innerHTML = `<div class="task-text">${task.text}</div><div class="task-meta"><span class="task-type">${task.type}</span><button class="complete-btn" onclick="completeTask('${categoryId}', ${task.id})">Done</button></div>`;
+                    tasksContainer.appendChild(taskDiv);
+                });
+            }
+            section.appendChild(tasksContainer);
+            content.appendChild(section);
+        }
+    }
+
+    function renderLimitsSection() {
+        const container = document.getElementById('limitsSection');
+        let html = '<div class="section-title" style="margin-bottom: 15px;">Daily Limits</div>';
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        for (const [categoryId, category] of Object.entries(categories)) {
+            html += `<div class="form-group"><label class="form-label">${category.name}</label>`;
+            for (let i = 0; i < days.length; i++) {
+                const dayKey = dayKeys[i];
+                const currentValue = rules[categoryId][dayKey];
+                html += `<div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                    <div style="width: 80px; font-size: 13px;">${days[i]}</div>
+                    <select class="form-input" id="${categoryId}${dayKey}" onchange="updateLimitValue('${categoryId}', '${dayKey}', this.value)" style="padding: 8px;">
+                        <option value="-1" ${currentValue === -1 ? 'selected' : ''}>Unlimited</option>
+                        <option value="0" ${currentValue === 0 ? 'selected' : ''}>0</option>
+                        <option value="1" ${currentValue === 1 ? 'selected' : ''}>1</option>
+                        <option value="2" ${currentValue === 2 ? 'selected' : ''}>2</option>
+                        <option value="3" ${currentValue === 3 ? 'selected' : ''}>3</option>
+                        <option value="4" ${currentValue === 4 ? 'selected' : ''}>4</option>
+                        <option value="5" ${currentValue === 5 ? 'selected' : ''}>5</option>
+                        <option value="6" ${currentValue === 6 ? 'selected' : ''}>6</option>
+                        <option value="7" ${currentValue === 7 ? 'selected' : ''}>7</option>
+                        <option value="8" ${currentValue === 8 ? 'selected' : ''}>8</option>
+                        <option value="9" ${currentValue === 9 ? 'selected' : ''}>9</option>
+                        <option value="10" ${currentValue === 10 ? 'selected' : ''}>10</option>
+                    </select>
+                </div>`;
+            }
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+
+    function updateLimitValue(categoryId, dayKey, value) {
+        rules[categoryId][dayKey] = parseInt(value);
+        saveDataToSupabase();
+    }
+
+    function renderTaskList() {
+        const container = document.getElementById('taskList');
+        container.innerHTML = '';
+        for (const [category, categoryTasks] of Object.entries(tasks)) {
+            categoryTasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'task-list-item';
+                div.style.cursor = 'pointer';
+                div.innerHTML = `<span onclick="editTask('${category}', ${task.id})">${task.text} (${task.type})</span><button class="delete-btn" onclick="deleteTask('${category}', ${task.id})">Delete</button>`;
+                container.appendChild(div);
+            });
+        }
+    }
+
+    function addTask() {
+        const text = document.getElementById('newTaskInput').value.trim();
+        const category = document.getElementById('taskCategory').value;
+        const frequency = document.getElementById('newTaskFrequency').value;
+        
+        if (!text) return;
+        
+        const newTask = {
+            id: Date.now(),
+            text: text,
+            type: frequency
+        };
+        
+        if (frequency !== 'never') {
+            const frequencyData = {
+                frequency: frequency,
+                interval: parseInt(document.getElementById('newTaskInterval').value) || 1,
+                unit: document.getElementById('newTaskUnit').value,
+                scheduling: document.getElementById('newTaskScheduling').value
+            };
+            
+            if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
+                const selectedDays = [];
+                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                    const checkbox = document.getElementById(`new_day_${day}`);
+                    if (checkbox && checkbox.checked) selectedDays.push(day);
+                });
+                frequencyData.daysOfWeek = selectedDays.length > 0 ? selectedDays : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            }
+            
+            newTask.frequencyData = frequencyData;
+            if (frequencyData.interval !== 1) {
+                newTask.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
+            }
+        }
+        
+        tasks[category].push(newTask);
+        
+        document.getElementById('newTaskInput').value = '';
+        document.getElementById('newTaskFrequency').value = 'weekly';
+        document.getElementById('newTaskInterval').value = 1;
+        document.getElementById('newTaskUnit').value = 'weeks';
+        document.getElementById('newTaskScheduling').value = 'fixed';
+        
+        ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+            const checkbox = document.getElementById(`new_day_${day}`);
+            if (checkbox) checkbox.checked = false;
+        });
+        
+        updateNewTaskFrequencyOptions();
+        renderTaskList();
+        renderDailyView();
+        saveDataToSupabase();
+    }
+
+    function deleteTask(category, taskId) {
+        tasks[category] = tasks[category].filter(task => task.id !== taskId);
+        renderTaskList();
+        renderDailyView();
+        saveDataToSupabase();
+    }
+
+    function completeTask(category, taskId) {
+        const task = tasks[category].find(t => t.id === taskId);
+        if (task) {
+            task.lastCompleted = new Date().toISOString();
+            saveDataToSupabase();
+        }
+        
+        event.target.textContent = '✓';
+        event.target.style.background = '#28a745';
+        setTimeout(() => {
+            renderDailyView();
+        }, 1000);
+    }
+
+    function showView(viewName) {
+        document.querySelectorAll('.view-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if (viewName === 'daily') {
+            document.getElementById('dailyView').style.display = 'block';
+            event.target.classList.add('active');
+            renderDailyView();
+        } else if (viewName === 'setup') {
+            document.getElementById('setupView').style.display = 'block';
+            event.target.classList.add('active');
+            updateCategoryDropdown();
+            renderTaskList();
+            renderLimitsSection();
+            renderCategoryList();
+        }
+    }
+
+    document.getElementById('currentDate').textContent = getCurrentDate();
+    updateCategoryDropdown();
+    renderDailyView();
+    renderCategoryList();
+    document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+</script>
 ```
+
+</body>
+</html>
