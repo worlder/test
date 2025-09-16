@@ -459,6 +459,10 @@
     }
 
     supabase.auth.onAuthStateChange(async (event, session) => {
+        // Always hide modals first during auth state changes
+        document.getElementById('deleteModal').style.display = 'none';
+        document.getElementById('editTaskModal').style.display = 'none';
+        
         if (session?.user) {
             currentUser = session.user;
             document.getElementById('authSection').style.display = 'none';
@@ -471,8 +475,6 @@
             document.getElementById('authSection').style.display = 'block';
             document.getElementById('userInfo').style.display = 'none';
             document.getElementById('logoutNavBtn').style.display = 'none';
-            // Hide modal when not signed in
-            document.getElementById('deleteModal').style.display = 'none';
             showSignIn();
             // Don't show tasks when not signed in
             document.getElementById('dailyView').innerHTML = '<div class="task-section"><div style="text-align: center; color: #666; font-style: italic; padding: 20px;">Please sign in to view your tasks</div></div>';
