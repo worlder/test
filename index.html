@@ -277,7 +277,7 @@
             <button class="nav-btn" onclick="signOut()" style="background: #dc3545;" id="logoutNavBtn">Sign Out</button>
         </div>
 <!-- Simple Delete Modal -->
-<div id="deleteModal" style="display: none !important;">
+<div id="deleteModal" class="hidden-modal">
     <div class="modal-content">
         <div class="modal-header">
             <div class="modal-title" id="deleteModalTitle">Delete Category</div>
@@ -287,8 +287,8 @@
             <!-- Task assignments will be populated here -->
         </div>
         <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmCategoryDelete()">Delete Category</button>
+            <button class="modal-btn modal-btn-cancel" id="cancelDeleteBtn">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn">Delete Category</button>
         </div>
     </div>
 </div>
@@ -1107,8 +1107,12 @@
     renderCategoryList();
     document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
     
+    // Setup modal event listeners
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmCategoryDelete);
+    
     // Ensure modals are hidden on startup
-    document.getElementById('deleteModal').style.display = 'none';
+    document.getElementById('deleteModal').className = 'hidden-modal';
     document.getElementById('editTaskModal').style.display = 'none';
 </script>
 ```
