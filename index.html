@@ -17,7 +17,8 @@
         .section-icon { width: 24px; height: 24px; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white; font-weight: 600; }
         .section-title { font-size: 16px; font-weight: 600; color: #333; }
         .task-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #e9ecef; transition: all 0.3s ease; }
-        .task-text { font-size: 15px; line-height: 1.4; color: #333; }
+        .task-text { font-size: 15px; line-height: 1.4; color: #333; cursor: pointer; }
+        .task-text:hover { background-color: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px; }
         .task-meta { font-size: 12px; color: #666; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
         .task-type { background: #e9ecef; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
         .complete-btn { background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; }
@@ -39,8 +40,8 @@
         .auth-toggle { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 14px; margin-top: 10px; }
 
 ```
-    /* Simple Modal Styles */
-    #deleteModal {
+    /* Task Edit Modal */
+    #editTaskModal {
         display: none;
         position: fixed;
         top: 0;
@@ -50,7 +51,7 @@
         background: rgba(0,0,0,0.5);
         z-index: 1000;
     }
-    .modal-content {
+    .edit-modal-content {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -77,21 +78,8 @@
         font-size: 14px; 
         color: #666; 
     }
-    .task-assignment {
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    .task-name {
-        font-weight: 500;
-        margin-bottom: 8px;
-    }
-    .assignment-select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+    .form-row {
+        margin-bottom: 15px;
     }
     .modal-actions {
         display: flex;
@@ -113,42 +101,8 @@
         color: #333;
     }
     .modal-btn-confirm {
-        background: #dc3545;
+        background: #007bff;
         color: white;
-    }
-    /* Task Edit Modal Styles */
-    #editTaskModal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-    }
-    .edit-modal-content {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 400px;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-    .form-row {
-        margin-bottom: 15px;
-    }
-    .edit-task-text {
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .edit-task-text:hover {
-        background-color: #f0f0f0;
     }
 </style>
 ```
@@ -276,26 +230,14 @@
             <button class="nav-btn" onclick="showView('setup')">Setup</button>
             <button class="nav-btn" onclick="signOut()" style="background: #dc3545;" id="logoutNavBtn">Sign Out</button>
         </div>
-<!-- Simple Delete Modal -->
-<div id="deleteModal" class="hidden-modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title" id="deleteModalTitle">Delete Category</div>
-            <div class="modal-subtitle">Choose what to do with tasks in this category</div>
-        </div>
-        <div id="deleteModalBody">
-            <!-- Task assignments will be populated here -->
-        </div>
-        <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" id="cancelDeleteBtn">Cancel</button>
-            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn">Delete Category</button>
-        </div>
     </div>
 </div>
+
+<!-- Task Edit Modal -->
 <div id="editTaskModal">
     <div class="edit-modal-content">
         <div class="modal-header">
-            <div class="modal-title" id="editTaskModalTitle">Edit Task</div>
+            <div class="modal-title">Edit Task</div>
             <div class="modal-subtitle">Modify task details</div>
         </div>
         
@@ -363,20 +305,6 @@
         </div>
     </div>
 </div>
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title" id="deleteModalTitle">Delete Category</div>
-            <div class="modal-subtitle">Choose what to do with tasks in this category</div>
-        </div>
-        <div id="deleteModalBody">
-            <!-- Task assignments will be populated here -->
-        </div>
-        <div class="modal-actions">
-            <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmCategoryDelete()">Delete Category</button>
-        </div>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -387,8 +315,6 @@
     let currentUser = null;
     let currentEditingTask = null;
     let currentEditingCategory = null;
-    let deletingCategoryId = null;
-    let taskAssignments = {};
 
     let categories = {
         comms: { name: 'Communications', icon: '📧', color: '#ff6b6b' },
@@ -471,10 +397,6 @@
     }
 
     supabase.auth.onAuthStateChange(async (event, session) => {
-        // Always hide modals first during auth state changes
-        document.getElementById('deleteModal').style.display = 'none';
-        document.getElementById('editTaskModal').style.display = 'none';
-        
         if (session?.user) {
             currentUser = session.user;
             document.getElementById('authSection').style.display = 'none';
@@ -488,7 +410,6 @@
             document.getElementById('userInfo').style.display = 'none';
             document.getElementById('logoutNavBtn').style.display = 'none';
             showSignIn();
-            // Don't show tasks when not signed in
             document.getElementById('dailyView').innerHTML = '<div class="task-section"><div style="text-align: center; color: #666; font-style: italic; padding: 20px;">Please sign in to view your tasks</div></div>';
         }
     });
@@ -565,6 +486,145 @@
         return dailyTasks;
     }
 
+    function editTask(categoryId, taskId) {
+        currentEditingCategory = categoryId;
+        const task = tasks[categoryId].find(t => t.id === taskId);
+        if (!task) return;
+        
+        currentEditingTask = task;
+        
+        document.getElementById('editTaskText').value = task.text;
+        
+        const categorySelect = document.getElementById('editTaskCategory');
+        categorySelect.innerHTML = '';
+        Object.entries(categories).forEach(([catId, category]) => {
+            const option = document.createElement('option');
+            option.value = catId;
+            option.textContent = category.name;
+            if (catId === categoryId) option.selected = true;
+            categorySelect.appendChild(option);
+        });
+        
+        if (task.frequencyData) {
+            document.getElementById('editTaskFrequency').value = task.frequencyData.frequency || 'weekly';
+            document.getElementById('editTaskInterval').value = task.frequencyData.interval || 1;
+            document.getElementById('editTaskUnit').value = task.frequencyData.unit || 'weeks';
+            document.getElementById('editTaskScheduling').value = task.frequencyData.scheduling || 'fixed';
+            
+            if (task.frequencyData.daysOfWeek) {
+                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                    const checkbox = document.getElementById(`edit_day_${day}`);
+                    if (checkbox) {
+                        checkbox.checked = task.frequencyData.daysOfWeek.includes(day);
+                    }
+                });
+            }
+        } else {
+            document.getElementById('editTaskFrequency').value = task.type || 'weekly';
+            document.getElementById('editTaskInterval').value = 1;
+            document.getElementById('editTaskUnit').value = 'weeks';
+            document.getElementById('editTaskScheduling').value = 'fixed';
+        }
+        
+        updateEditTaskFrequencyOptions();
+        document.getElementById('editTaskModal').style.display = 'block';
+    }
+
+    function updateEditTaskFrequencyOptions() {
+        const frequency = document.getElementById('editTaskFrequency').value;
+        const details = document.getElementById('editTaskFrequencyDetails');
+        const weeklyOptions = document.getElementById('editTaskWeeklyOptions');
+        
+    function updateEditTaskFrequencyOptions() {
+        const frequency = document.getElementById('editTaskFrequency').value;
+        const details = document.getElementById('editTaskFrequencyDetails');
+        const weeklyOptions = document.getElementById('editTaskWeeklyOptions');
+        
+        if (frequency === 'never') {
+            details.style.display = 'none';
+        } else {
+            details.style.display = 'block';
+            
+            const unitSelect = document.getElementById('editTaskUnit');
+            const intervalInput = document.getElementById('editTaskInterval');
+            
+            if (frequency === 'daily') {
+                unitSelect.value = 'days';
+                intervalInput.value = 1;
+            } else if (frequency === 'weekly') {
+                unitSelect.value = 'weeks';
+                intervalInput.value = 1;
+            } else if (frequency === 'monthly') {
+                unitSelect.value = 'months';
+                intervalInput.value = 1;
+            } else if (frequency === 'yearly') {
+                unitSelect.value = 'years';
+                intervalInput.value = 1;
+            }
+            
+            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
+        }
+    }
+
+    function closeEditTaskModal() {
+        document.getElementById('editTaskModal').style.display = 'none';
+        currentEditingTask = null;
+        currentEditingCategory = null;
+    }
+
+    function saveTaskChanges() {
+        if (!currentEditingTask || !currentEditingCategory) return;
+        
+        const newText = document.getElementById('editTaskText').value.trim();
+        const newCategory = document.getElementById('editTaskCategory').value;
+        const frequency = document.getElementById('editTaskFrequency').value;
+        
+        if (!newText) {
+            alert('Task description cannot be empty');
+            return;
+        }
+        
+        currentEditingTask.text = newText;
+        currentEditingTask.type = frequency;
+        
+        if (frequency !== 'never') {
+            const frequencyData = {
+                frequency: frequency,
+                interval: parseInt(document.getElementById('editTaskInterval').value) || 1,
+                unit: document.getElementById('editTaskUnit').value,
+                scheduling: document.getElementById('editTaskScheduling').value
+            };
+            
+            if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
+                const selectedDays = [];
+                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
+                    const checkbox = document.getElementById(`edit_day_${day}`);
+                    if (checkbox && checkbox.checked) selectedDays.push(day);
+                });
+                frequencyData.daysOfWeek = selectedDays.length > 0 ? selectedDays : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            }
+            
+            currentEditingTask.frequencyData = frequencyData;
+            if (frequencyData.interval !== 1) {
+                currentEditingTask.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
+            }
+        } else {
+            delete currentEditingTask.frequencyData;
+        }
+        
+        if (newCategory !== currentEditingCategory) {
+            tasks[currentEditingCategory] = tasks[currentEditingCategory].filter(t => t.id !== currentEditingTask.id);
+            if (!tasks[newCategory]) tasks[newCategory] = [];
+            tasks[newCategory].push(currentEditingTask);
+        }
+        
+        renderDailyView();
+        renderTaskList();
+        renderCategoryList();
+        saveDataToSupabase();
+        closeEditTaskModal();
+    }
+
     function updateNewTaskFrequencyOptions() {
         const frequency = document.getElementById('newTaskFrequency').value;
         const details = document.getElementById('newTaskFrequencyDetails');
@@ -615,283 +675,21 @@
         }
     }
 
-    function editTask(categoryId, taskId) {
-        currentEditingCategory = categoryId;
-        const task = tasks[categoryId].find(t => t.id === taskId);
-        if (!task) return;
-        
-        currentEditingTask = task;
-        
-        // Populate the edit form
-        document.getElementById('editTaskText').value = task.text;
-        
-        // Populate category dropdown
-        const categorySelect = document.getElementById('editTaskCategory');
-        categorySelect.innerHTML = '';
-        Object.entries(categories).forEach(([catId, category]) => {
-            const option = document.createElement('option');
-            option.value = catId;
-            option.textContent = category.name;
-            if (catId === categoryId) option.selected = true;
-            categorySelect.appendChild(option);
-        });
-        
-        // Set frequency
-        if (task.frequencyData) {
-            document.getElementById('editTaskFrequency').value = task.frequencyData.frequency || 'weekly';
-            document.getElementById('editTaskInterval').value = task.frequencyData.interval || 1;
-            document.getElementById('editTaskUnit').value = task.frequencyData.unit || 'weeks';
-            document.getElementById('editTaskScheduling').value = task.frequencyData.scheduling || 'fixed';
-            
-            // Set days of week if applicable
-            if (task.frequencyData.daysOfWeek) {
-                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                    const checkbox = document.getElementById(`edit_day_${day}`);
-                    if (checkbox) {
-                        checkbox.checked = task.frequencyData.daysOfWeek.includes(day);
-                    }
-                });
-            }
-        } else {
-            document.getElementById('editTaskFrequency').value = task.type || 'weekly';
-            document.getElementById('editTaskInterval').value = 1;
-            document.getElementById('editTaskUnit').value = 'weeks';
-            document.getElementById('editTaskScheduling').value = 'fixed';
-        }
-        
-        updateEditTaskFrequencyOptions();
-        document.getElementById('editTaskModal').style.display = 'block';
-    }
-
-    function updateEditTaskFrequencyOptions() {
-        const frequency = document.getElementById('editTaskFrequency').value;
-        const details = document.getElementById('editTaskFrequencyDetails');
-        const weeklyOptions = document.getElementById('editTaskWeeklyOptions');
-        
-        if (frequency === 'never') {
-            details.style.display = 'none';
-        } else {
-            details.style.display = 'block';
-            
-            const unitSelect = document.getElementById('editTaskUnit');
-            const intervalInput = document.getElementById('editTaskInterval');
-            
-            if (frequency === 'daily') {
-                unitSelect.value = 'days';
-                intervalInput.value = 1;
-            } else if (frequency === 'weekly') {
-                unitSelect.value = 'weeks';
-                intervalInput.value = 1;
-            } else if (frequency === 'monthly') {
-                unitSelect.value = 'months';
-                intervalInput.value = 1;
-            } else if (frequency === 'yearly') {
-                unitSelect.value = 'years';
-                intervalInput.value = 1;
-            }
-            
-            weeklyOptions.style.display = (frequency === 'weekly' || unitSelect.value === 'weeks') ? 'block' : 'none';
-        }
-    }
-
-    function closeEditTaskModal() {
-        document.getElementById('editTaskModal').style.display = 'none';
-        currentEditingTask = null;
-        currentEditingCategory = null;
-    }
-
-    function saveTaskChanges() {
-        if (!currentEditingTask || !currentEditingCategory) return;
-        
-        const newText = document.getElementById('editTaskText').value.trim();
-        const newCategory = document.getElementById('editTaskCategory').value;
-        const frequency = document.getElementById('editTaskFrequency').value;
-        
-        if (!newText) {
-            alert('Task description cannot be empty');
-            return;
-        }
-        
-        // Update task properties
-        currentEditingTask.text = newText;
-        currentEditingTask.type = frequency;
-        
-        // Handle frequency data
-        if (frequency !== 'never') {
-            const frequencyData = {
-                frequency: frequency,
-                interval: parseInt(document.getElementById('editTaskInterval').value) || 1,
-                unit: document.getElementById('editTaskUnit').value,
-                scheduling: document.getElementById('editTaskScheduling').value
-            };
-            
-            if (frequency === 'weekly' || frequencyData.unit === 'weeks') {
-                const selectedDays = [];
-                ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].forEach(day => {
-                    const checkbox = document.getElementById(`edit_day_${day}`);
-                    if (checkbox && checkbox.checked) selectedDays.push(day);
-                });
-                frequencyData.daysOfWeek = selectedDays.length > 0 ? selectedDays : ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            }
-            
-            currentEditingTask.frequencyData = frequencyData;
-            if (frequencyData.interval !== 1) {
-                currentEditingTask.type = `every-${frequencyData.interval}-${frequencyData.unit}`;
-            }
-        } else {
-            delete currentEditingTask.frequencyData;
-        }
-        
-        // Move task to new category if changed
-        if (newCategory !== currentEditingCategory) {
-            // Remove from old category
-            tasks[currentEditingCategory] = tasks[currentEditingCategory].filter(t => t.id !== currentEditingTask.id);
-            
-            // Add to new category
-            if (!tasks[newCategory]) tasks[newCategory] = [];
-            tasks[newCategory].push(currentEditingTask);
-        }
-        
-        // Update UI and save
-        renderDailyView();
-        renderTaskList();
-        renderCategoryList();
-        saveDataToSupabase();
-        closeEditTaskModal();
-    }
-        if (Object.keys(categories).length <= 1) {
-            alert('You must have at least one category');
-            return;
-        }
-
-        const categoryTasks = tasks[categoryId] || [];
-        
-        if (categoryTasks.length === 0) {
-            // No tasks, simple delete
-            const categoryName = categories[categoryId].name;
-            if (confirm(`Delete "${categoryName}" category? It has no tasks.`)) {
-                delete categories[categoryId];
-                delete tasks[categoryId];
-                delete rules[categoryId];
-                delete rotationIndex[categoryId];
-                updateCategoryDropdown();
-                renderDailyView();
-                renderLimitsSection();
-                renderCategoryList();
-                renderTaskList();
-                saveDataToSupabase();
-            }
-        } else {
-            // Has tasks, show modal
-            showDeleteModal(categoryId);
-        }
-    }
-
-    function showDeleteModal(categoryId) {
-        // Only show modal if user is signed in and category exists
-        if (!currentUser || !categories[categoryId]) return;
-        
-        deletingCategoryId = categoryId;
-        taskAssignments = {};
-        
+    function deleteCategory(categoryId) {
+        if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
         const categoryName = categories[categoryId].name;
-        const categoryTasks = tasks[categoryId] || [];
-        
-        document.getElementById('deleteModalTitle').textContent = `Delete "${categoryName}" Category`;
-        
-        const modalBody = document.getElementById('deleteModalBody');
-        modalBody.innerHTML = '';
-        
-        if (categoryTasks.length > 0) {
-            const instructions = document.createElement('div');
-            instructions.innerHTML = `<p style="margin-bottom: 16px; color: #666; font-size: 14px;">Choose what to do with each task:</p>`;
-            modalBody.appendChild(instructions);
-            
-            categoryTasks.forEach(task => {
-                const taskDiv = document.createElement('div');
-                taskDiv.className = 'task-assignment';
-                
-                const taskName = document.createElement('div');
-                taskName.className = 'task-name';
-                taskName.textContent = task.text;
-                
-                const select = document.createElement('select');
-                select.className = 'assignment-select';
-                select.setAttribute('data-task-id', task.id);
-                
-                select.innerHTML = '<option value="">Choose action...</option>';
-                
-                // Add other categories as options
-                Object.entries(categories).forEach(([catId, category]) => {
-                    if (catId !== categoryId) {
-                        select.innerHTML += `<option value="${catId}">Move to ${category.name}</option>`;
-                    }
-                });
-                
-                select.innerHTML += '<option value="delete">Delete this task</option>';
-                
-                select.onchange = function() {
-                    taskAssignments[task.id] = this.value;
-                    checkAllAssigned();
-                };
-                
-                taskDiv.appendChild(taskName);
-                taskDiv.appendChild(select);
-                modalBody.appendChild(taskDiv);
-            });
-        }
-        
-        // Show modal by removing the !important display none
-        const modal = document.getElementById('deleteModal');
-        modal.style.setProperty('display', 'block', 'important');
-        checkAllAssigned();
-    }
-
-    function checkAllAssigned() {
-        const categoryTasks = tasks[deletingCategoryId] || [];
-        const allAssigned = categoryTasks.every(task => taskAssignments[task.id] && taskAssignments[task.id] !== '');
-        document.getElementById('confirmDeleteBtn').disabled = !allAssigned;
-    }
-
-    function closeDeleteModal() {
-        const modal = document.getElementById('deleteModal');
-        modal.style.display = 'none';
-        modal.style.setProperty('display', 'none', 'important');
-        deletingCategoryId = null;
-        taskAssignments = {};
-    }
-
-    function confirmCategoryDelete() {
-        if (!deletingCategoryId) return;
-        
-        const categoryTasks = tasks[deletingCategoryId] || [];
-        
-        // Process each task assignment
-        categoryTasks.forEach(task => {
-            const assignment = taskAssignments[task.id];
-            if (assignment && assignment !== 'delete') {
-                // Move task to another category
-                if (!tasks[assignment]) tasks[assignment] = [];
-                tasks[assignment].push(task);
-            }
-            // If assignment is 'delete' or empty, task will be deleted
-        });
-        
-        // Delete the category
-        delete categories[deletingCategoryId];
-        delete tasks[deletingCategoryId];
-        delete rules[deletingCategoryId];
-        delete rotationIndex[deletingCategoryId];
-        
-        // Update UI
+        const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
+        if (!confirm(`Delete "${categoryName}" category?${taskCount > 0 ? ` This will delete ${taskCount} tasks.` : ''}`)) return;
+        delete categories[categoryId];
+        delete tasks[categoryId];
+        delete rules[categoryId];
+        delete rotationIndex[categoryId];
         updateCategoryDropdown();
         renderDailyView();
         renderLimitsSection();
         renderCategoryList();
         renderTaskList();
         saveDataToSupabase();
-        
-        closeDeleteModal();
     }
 
     function renderCategoryList() {
@@ -940,7 +738,7 @@
                     taskDiv.className = 'task-item';
                     taskDiv.style.borderLeftColor = category.color;
                     taskDiv.innerHTML = `
-                        <div class="task-text edit-task-text" onclick="editTask('${categoryId}', ${task.id})">${task.text}</div>
+                        <div class="task-text" onclick="editTask('${categoryId}', ${task.id})">${task.text}</div>
                         <div class="task-meta">
                             <span class="task-type">${task.type}</span>
                             <button class="complete-btn" onclick="completeTask('${categoryId}', ${task.id})">Done</button>
@@ -1100,20 +898,11 @@
         }
     }
 
-    // Initialize the app
     document.getElementById('currentDate').textContent = getCurrentDate();
     updateCategoryDropdown();
     renderDailyView();
     renderCategoryList();
     document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
-    
-    // Setup modal event listeners
-    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
-    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmCategoryDelete);
-    
-    // Ensure modals are hidden on startup
-    document.getElementById('deleteModal').className = 'hidden-modal';
-    document.getElementById('editTaskModal').style.display = 'none';
 </script>
 ```
 
