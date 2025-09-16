@@ -276,10 +276,22 @@
             <button class="nav-btn" onclick="showView('setup')">Setup</button>
             <button class="nav-btn" onclick="signOut()" style="background: #dc3545;" id="logoutNavBtn">Sign Out</button>
         </div>
+<!-- Simple Delete Modal -->
+<div id="deleteModal" style="display: none !important;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="deleteModalTitle">Delete Category</div>
+            <div class="modal-subtitle">Choose what to do with tasks in this category</div>
+        </div>
+        <div id="deleteModalBody">
+            <!-- Task assignments will be populated here -->
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <button class="modal-btn modal-btn-confirm" id="confirmDeleteBtn" onclick="confirmCategoryDelete()">Delete Category</button>
+        </div>
     </div>
 </div>
-
-<!-- Task Edit Modal -->
 <div id="editTaskModal">
     <div class="edit-modal-content">
         <div class="modal-header">
@@ -776,6 +788,9 @@
     }
 
     function showDeleteModal(categoryId) {
+        // Only show modal if user is signed in and category exists
+        if (!currentUser || !categories[categoryId]) return;
+        
         deletingCategoryId = categoryId;
         taskAssignments = {};
         
@@ -826,7 +841,9 @@
             });
         }
         
-        document.getElementById('deleteModal').style.display = 'block';
+        // Show modal by removing the !important display none
+        const modal = document.getElementById('deleteModal');
+        modal.style.setProperty('display', 'block', 'important');
         checkAllAssigned();
     }
 
@@ -837,7 +854,9 @@
     }
 
     function closeDeleteModal() {
-        document.getElementById('deleteModal').style.display = 'none';
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
         deletingCategoryId = null;
         taskAssignments = {};
     }
