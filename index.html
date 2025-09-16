@@ -397,6 +397,9 @@
     }
 
     supabase.auth.onAuthStateChange(async (event, session) => {
+        // Hide edit modal during auth state changes
+        document.getElementById('editTaskModal').style.display = 'none';
+        
         if (session?.user) {
             currentUser = session.user;
             document.getElementById('authSection').style.display = 'none';
@@ -903,6 +906,9 @@
     renderDailyView();
     renderCategoryList();
     document.getElementById('newTaskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+    
+    // Ensure edit modal starts hidden
+    document.getElementById('editTaskModal').style.display = 'none';
 </script>
 ```
 
