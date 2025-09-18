@@ -401,6 +401,21 @@
         }
     }
 
+    function renameCategory(categoryId) {
+        const category = categories[categoryId];
+        if (!category) return;
+        
+        const newName = prompt(`Rename category "${category.name}":`, category.name);
+        if (newName && newName.trim() && newName.trim() !== category.name) {
+            category.name = newName.trim();
+            updateCategoryDropdown();
+            renderDailyView();
+            renderLimitsSection();
+            renderCategoryList();
+            saveDataToSupabase();
+        }
+    }
+
     function deleteCategory(categoryId) {
         if (Object.keys(categories).length <= 1) return alert('You must have at least one category');
         const categoryName = categories[categoryId].name;
@@ -425,7 +440,13 @@
             const taskCount = tasks[categoryId] ? tasks[categoryId].length : 0;
             const div = document.createElement('div');
             div.className = 'task-list-item';
-            div.innerHTML = `<span>${category.icon} ${category.name} (${taskCount} tasks)</span><button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>`;
+            div.innerHTML = `
+                <span>${category.icon} ${category.name} (${taskCount} tasks)</span>
+                <div style="display: flex; gap: 5px;">
+                    <button class="delete-btn" style="background: #007bff;" onclick="renameCategory('${categoryId}')">Rename</button>
+                    <button class="delete-btn" onclick="deleteCategory('${categoryId}')">Delete</button>
+                </div>
+            `;
             container.appendChild(div);
         }
     }
