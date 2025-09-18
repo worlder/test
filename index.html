@@ -280,6 +280,17 @@
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const todayName = dayNames[dayOfWeek];
         
+        // If task was completed today, don't show it again today
+        if (task.lastCompleted) {
+            const completedDate = new Date(task.lastCompleted);
+            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const completedStart = new Date(completedDate.getFullYear(), completedDate.getMonth(), completedDate.getDate());
+            
+            if (completedStart.getTime() === todayStart.getTime()) {
+                return false; // Completed today, don't show again
+            }
+        }
+        
         if (task.frequencyData) {
             const data = task.frequencyData;
             if (data.frequency === 'never') return false;
